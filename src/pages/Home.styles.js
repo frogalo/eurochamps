@@ -6,13 +6,14 @@ export const RankingContainer = styled.div`
     flex-direction: column;
     align-items: center;
   
-    height: 100vh;
+    height: 80vh;
     background-color: #f9f9f9;
     padding: 1rem;
 `;
 
 // Styled button for stage selection
 export const StageButton = styled.button`
+    min-width: 300px;
     padding: 1rem 2rem; /* Default padding */
     font-size: 1.2rem;
     background-color: #007bff;

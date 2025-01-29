@@ -4,7 +4,6 @@ import { useUser } from "../context/UserContext";
 import { RankingContainer, StageButton } from "./Home.styles";
 
 const Home = () => {
-    const { user } = useUser(); // Access the logged-in user
     const navigate = useNavigate(); // Hook for navigation
     const [stages, setStages] = useState([]); // State to store stages
 
@@ -23,9 +22,9 @@ const Home = () => {
                 console.error("Failed to fetch stages:", error);
             }
         };
-
         fetchStages();
-    }, []);
+
+    }, []); // Empty dependency array means this runs once on mount
 
     const handleStageSelect = (stage) => {
         // Navigate to the selected stage

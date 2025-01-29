@@ -14,7 +14,7 @@ const Header = () => {
 
     return (
         <HeaderContainer>
-            <Title>{user ? "Ranking" : "Etapy"}</Title> {/* Change title based on the page */}
+            <Title>{user ? "Etapy" : "Rankign"}</Title> {/* Change title based on the page */}
             <NameDiv>
                 {user && (
                     <>

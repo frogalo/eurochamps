@@ -1,0 +1,45 @@
+# Node.js dependencies
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build output
+build/
+dist/
+
+# Static files cache
+.cache/
+
+# Testing
+coverage/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE settings
+.idea/
+.vscode/
+*.swp
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Package lock files (optional, if you want to ignore them)
+package-lock.json
+yarn.lock
+
+# React-specific
+public/*.cache
+public/*.map
+
+# Miscellaneous
+*.log
+*.tmp

@@ -1,37 +1,33 @@
-import styled from 'styled-components';
-import {Link} from "react-router-dom";
+import styled from "styled-components";
 
-// Styled header container
 export const HeaderContainer = styled.header`
-  background-color: #282c34;
-  color: white;
-  padding: 1rem;
-  text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #282c34;
+    color: white;
 `;
 
-// Styled title
 export const Title = styled.h1`
-  font-size: 2rem;
-  margin: 0;
+    font-size: 1.5rem;
+    margin: 0;
 `;
 
-// Styled navigation container
-export const Nav = styled.nav`
-  margin-top: 1rem;
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+export const NameDiv = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Space between name and icon */
 `;
 
-// Styled navigation links
-export const NavLink = styled(Link)`
-  color: white;
-  text-decoration: none;
-  font-size: 1rem;
-  transition: color 0.3s ease;
+export const LogoutButton = styled.button`
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 1.2rem; /* Adjust size for the icon */
 
-  &:hover {
-    color: #61dafb;
-  }
+    &:hover {
+        color: #61dafb; /* Change color on hover */
+    }
 `;

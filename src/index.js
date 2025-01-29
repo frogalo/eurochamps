@@ -1,14 +1,16 @@
 import React from "react";
-import ReactDOM from "react-dom/client"; // Use the new ReactDOM client
+import ReactDOM from "react-dom/client";
 import App from "./App";
-import "./styles/App.css"; // Import global styles here
-// Get the root element from the DOM
-const rootElement = document.getElementById("root");
+import { UserProvider } from "./context/UserContext"; // Import the UserProvider
+import "./styles/App.css";
 
-// Create a root and render the App component
+const rootElement = document.getElementById("root");
 const root = ReactDOM.createRoot(rootElement);
+
 root.render(
     <React.StrictMode>
-        <App/>
+        <UserProvider>
+            <App />
+        </UserProvider>
     </React.StrictMode>
 );

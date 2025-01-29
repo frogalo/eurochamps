@@ -1,29 +1,28 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import Home from './pages/Home';
-import Voting from './pages/Voting';
-import LeaderboardPage from './pages/LeaderboardPage';
-import Profile from './pages/Profile';
+// src/App.js
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useUser } from "./context/UserContext"; // Import the UserContext
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import Home from "./pages/Home";
+import Login from "./pages/Login"; // Import the Login screen
 
 const App = () => {
-  return (
-    <Router>
-      <div className='app'>
-        <Header />
-        <main>
-          <Routes>
-            <Route path='/' element={<Home />} />
-            <Route path='/voting' element={<Voting />} />
-            <Route path='/leaderboard' element={<LeaderboardPage />} />
-            <Route path='/profile' element={<Profile />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
-  );
+    const { user } = useUser(); // Access the logged-in user from context
+
+
+    return (
+        <Router>
+            <div className="app">
+                {user && <Header />} {/* Show header only if user is logged in */}
+                <Routes>
+                    <Route path="/" element={user ? <Home /> : <Login />} />
+                    <Route path="/stages" element={<Home />} />
+                </Routes>
+                {user && <Footer />}
+            </div>
+        </Router>
+    );
 };
 
 export default App;

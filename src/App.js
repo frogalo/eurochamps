@@ -15,12 +15,12 @@ const App = () => {
 
     return (
         <Router>
-            <GlobalStyles />
+            <GlobalStyles/>
             <div className="app">
                 {user && <Header/>} {/* Show header only if user is logged in */}
                 <Routes>
                     <Route path="/" element={user ? <Home/> : <Login/>}/>
-                    <Route path="/stages/:stageId" element={<Stage />} /> {/* Route for stages */}
+                    <Route path="/stages/:stageId" element={user ? <Stage/> : <Login/>}/>
                 </Routes>
             </div>
         </Router>

@@ -48,7 +48,6 @@ export const UserListItem = styled.li`
     justify-content: center; /* Center the content horizontally */
 `;
 
-
 // Styled button for user selection
 export const UserButton = styled.button`
     padding: 0.75rem 1.5rem;
@@ -79,5 +78,28 @@ export const UserButton = styled.button`
     @media (max-width: 480px) {
         font-size: 1.8rem; /* Further reduce font size for very small screens */
         padding: 0.5rem 0.8rem; /* Further adjust padding */
+    }
+`;
+
+// Styled button for adding a new user
+export const NewUserButton = styled.button`
+    padding: 0.75rem 1.5rem;
+    font-size: 1.5rem;
+    background-color: #28a745; /* Green color for add button */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 1rem; /* Space above the button */
+    width: 100%; /* Make the button take full width */
+    max-width: 300px; /* Limit the button width on larger screens */
+
+    &:hover {
+        background-color: #218838; /* Darker green on hover */
+    }
+
+    &:active {
+        background-color: #1e7e34; /* Even darker green on active */
     }
 `;

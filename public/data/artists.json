@@ -1,0 +1,38 @@
+[
+  {
+    "id": "1",
+    "name": "Polska",
+    "country": "Poland",
+    "countryCode": "PL",
+    "songTitle": "Song Title 1",
+    "songUrl": "https://www.youtube.com/watch?v=example",
+    "stage": "polfinal1"
+  },
+  {
+    "id": "2",
+    "name": "Szwecja",
+    "country": "Sweden",
+    "countryCode": "SE",
+    "songTitle": "Song Title 2",
+    "songUrl": "https://www.youtube.com/watch?v=example",
+    "stage": "polfinal1"
+  },
+  {
+    "id": "3",
+    "name": "Niemcy",
+    "country": "Germany",
+    "countryCode": "DE",
+    "songTitle": "Song Title 3",
+    "songUrl": "https://www.youtube.com/watch?v=example",
+    "stage": "polfinal2"
+  },
+  {
+    "id": "4",
+    "name": "Austria",
+    "country": "Austria",
+    "countryCode": "AT",
+    "songTitle": "Song Title 4",
+    "songUrl": "https://www.youtube.com/watch?v=example",
+    "stage": "final"
+  }
+]

@@ -6,7 +6,8 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import {GlobalStyles} from "./styles/GlobalStyles"; // Import the Login screen
+import {GlobalStyles} from "./styles/GlobalStyles";
+import Stage from "./pages/Stage"; // Import the Login screen
 
 const App = () => {
     const {user} = useUser(); // Access the logged-in user from context
@@ -19,7 +20,7 @@ const App = () => {
                 {user && <Header/>} {/* Show header only if user is logged in */}
                 <Routes>
                     <Route path="/" element={user ? <Home/> : <Login/>}/>
-                    <Route path="/stages" element={<Home/>}/>
+                    <Route path="/stages/:stageId" element={<Stage />} /> {/* Route for stages */}
                 </Routes>
             </div>
         </Router>

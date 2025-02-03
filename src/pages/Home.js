@@ -17,7 +17,7 @@ const Home = () => {
                     throw new Error("Network response was not ok");
                 }
                 const data = await response.json();
-                console.log("Fetched data:", data); // Log the fetched data
+                // console.log("Fetched data:", data); // Log the fetched data
                 setYears(data.years); // Set the fetched array directly
             } catch (error) {
                 console.error("Failed to fetch years:", error);

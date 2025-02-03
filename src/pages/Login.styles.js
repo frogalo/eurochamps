@@ -52,7 +52,7 @@ export const UserListItem = styled.li`
 // Styled button for user selection
 export const UserButton = styled.button`
     padding: 0.75rem 1.5rem;
-    font-size: 1rem;
+    font-size: 2rem;
     background-color: #007bff;
     color: white;
     border: none;
@@ -72,12 +72,12 @@ export const UserButton = styled.button`
     }
 
     @media (max-width: 768px) {
-        font-size: 0.9rem; /* Adjust font size for smaller screens */
+        font-size: 1.9rem; /* Adjust font size for smaller screens */
         padding: 0.6rem 1rem; /* Adjust padding for smaller screens */
     }
 
     @media (max-width: 480px) {
-        font-size: 0.8rem; /* Further reduce font size for very small screens */
+        font-size: 1.8rem; /* Further reduce font size for very small screens */
         padding: 0.5rem 0.8rem; /* Further adjust padding */
     }
 `;

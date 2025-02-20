@@ -34,3 +34,17 @@ export const getStages = async () => {
         throw error; // Rethrow the error for handling in the component
     }
 };
+
+// Function to fetch a single stage by ID
+export const getStageById = async (stageId) => {
+    try {
+        const response = await fetch(`${API_URL}/${stageId}`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch stage with ID: ${stageId}`);
+        }
+        return await response.json(); // Return the fetched stage data
+    } catch (error) {
+        console.error(`Error fetching stage with ID ${stageId}:`, error);
+        throw error; // Rethrow the error for handling in the component
+    }
+};

@@ -1,12 +1,12 @@
 import styled from "styled-components";
 
-// Styled container for the home screen
+// Styled container for the ranking screen
 export const RankingContainer = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    height: 80vh;
+    margin-top: 120px;
+    height: 100vh;
     background-color: #f9f9f9;
     padding: 1rem;
 `;
@@ -22,7 +22,7 @@ export const YearButton = styled.button`
     cursor: pointer;
     margin: 0.5rem 0;
     transition: background-color 0.3s ease;
-    width: 80vw;
+    width: 80%;
 
     &:hover {
         background-color: #0056b3;
@@ -44,8 +44,8 @@ export const StageButton = styled.button`
     cursor: pointer;
     margin: 0.5rem 0;
     transition: background-color 0.3s ease;
-    width: 80vw;
-
+    width: 80%;
+    
     &:hover {
         background-color: #0056b3;
     }
@@ -54,6 +54,28 @@ export const StageButton = styled.button`
         background-color: #003f8a;
     }
 `;
+
+// Styled button for adding a new year
+export const NewYearButton = styled.button`
+    padding: 0.75rem 1.5rem;
+    font-size: 1.5rem;
+    background-color: #28a745; /* Green color for add button */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 1rem; /* Space above the button */
+    width: 80%;
+    
+    &:hover {
+        background-color: #218838; /* Darker green on hover */
+    }
+
+    &:active {
+        background-color: #1e7e34; /* Even darker green on active */
+    }
+`;
+
 // Styled button for going back to years
 export const BackButton = styled.button`
     padding: 0.75rem 1.5rem;
@@ -63,9 +85,10 @@ export const BackButton = styled.button`
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    margin-top: 3rem; /* Space below the button */
+    margin-bottom: 1rem; /* Space below the button */
     transition: background-color 0.3s ease;
-    width: 70vw;
+    width: 80%;
+    
     &:hover {
         background-color: #e60000; /* Darker red on hover */
     }

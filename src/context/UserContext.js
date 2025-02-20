@@ -1,4 +1,3 @@
-// src/UserContext.js
 import React, { createContext, useState, useContext, useEffect } from "react";
 
 // Create the UserContext
@@ -11,17 +10,27 @@ export const UserProvider = ({ children }) => {
         return localStorage.getItem("user") || null;
     });
 
-    // Save the user to localStorage whenever it changes
+    // Initialize the role state with the value from localStorage (if it exists)
+    const [role, setRole] = useState(() => {
+        return localStorage.getItem("role") === "true"; // Convert to boolean
+    });
+
+    // Save the user and role to localStorage whenever they change
     useEffect(() => {
         if (user) {
             localStorage.setItem("user", user);
         } else {
             localStorage.removeItem("user");
+            localStorage.removeItem("role");
         }
     }, [user]);
 
+    useEffect(() => {
+        localStorage.setItem("role", role); // Save role as a string
+    }, [role]);
+
     return (
-        <UserContext.Provider value={{ user, setUser }}>
+        <UserContext.Provider value={{ user, setUser, role, setRole }}>
             {children}
         </UserContext.Provider>
     );

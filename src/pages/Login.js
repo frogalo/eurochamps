@@ -14,7 +14,7 @@ import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'; // Import the 
 import { fetchUsers, addUser } from "../api/users"; // Import the fetchUsers and addUser functions
 
 const Login = () => {
-    const { setUser } = useUser(); // Access the setUser function from context
+    const { setUser, setRole } = useUser(); // Access the setUser function from context
     const [users, setUsers] = useState([]); // State to store users
     const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
 
@@ -32,8 +32,9 @@ const Login = () => {
         loadUsers();
     }, []); // Empty dependency array means this runs once on mount
 
-    const handleLogin = (name) => {
+    const handleLogin = (name, role) => {
         setUser(name); // Set the selected user in context and localStorage
+        setRole(role); // Set the selected user in context and localStorage
     };
 
     const sortedUsers = [...users].sort((a, b) => a.name.localeCompare(b.name));
@@ -56,7 +57,7 @@ const Login = () => {
             <UserList>
                 {sortedUsers.map((user) => (
                     <UserListItem key={user.name}>
-                        <UserButton onClick={() => handleLogin(user.name)}>
+                        <UserButton onClick={() => handleLogin(user.name, user.isAdmin)}>
                             {user.name}
                         </UserButton>
                     </UserListItem>

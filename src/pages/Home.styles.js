@@ -88,6 +88,7 @@ export const BackButton = styled.button`
     margin-bottom: 1rem; /* Space below the button */
     transition: background-color 0.3s ease;
     width: 80%;
+    margin-top: 2rem;
     
     &:hover {
         background-color: #e60000; /* Darker red on hover */
@@ -95,5 +96,26 @@ export const BackButton = styled.button`
 
     &:active {
         background-color: #cc0000; /* Even darker red on active */
+    }
+`;
+// Styled button for adding a new stage
+export const NewStageButton = styled.button`
+    padding: 0.75rem 1.5rem;
+    font-size: 1.5rem;
+    background-color: #17a2b8; /* Teal color for add button */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 1rem; /* Space above the button */
+    margin-bottom: 1rem; /* Space above the button */
+    width: 80%;
+    
+    &:hover {
+        background-color: #138496; /* Darker teal on hover */
+    }
+
+    &:active {
+        background-color: #117a8b; /* Even darker teal on active */
     }
 `;

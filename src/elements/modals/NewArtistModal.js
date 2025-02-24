@@ -1,5 +1,9 @@
 import React, { useState } from "react";
-import { ModalContainer, ModalContent, ModalButton } from "./NewArtistModal.styles"; // Import styles
+import {
+    ModalContainer,
+    ModalContent,
+    ModalButton,
+} from "./NewArtistModal.styles"; // Import styles
 import { addArtist } from "../../api/artists"; // Import the addArtist function
 
 const NewArtistModal = ({ isOpen, onClose, onArtistAdded, stageId }) => {
@@ -17,9 +21,9 @@ const NewArtistModal = ({ isOpen, onClose, onArtistAdded, stageId }) => {
                 songUrl,
                 songTitle,
                 stage: stageId,
-                imageUrl
+                imageUrl,
             }); // Call the API to add the artist
-            onArtistAdded(); // Notify the parent component
+            await onArtistAdded(); // Notify the parent component and wait for it to finish
             setName("");
             setCountry("");
             setSongUrl("");
@@ -28,6 +32,7 @@ const NewArtistModal = ({ isOpen, onClose, onArtistAdded, stageId }) => {
             onClose(); // Close the modal
         } catch (error) {
             console.error("Error adding artist:", error);
+            // Consider displaying an error message to the user
         }
     };
 
@@ -67,7 +72,9 @@ const NewArtistModal = ({ isOpen, onClose, onArtistAdded, stageId }) => {
                     onChange={(e) => setImageUrl(e.target.value)}
                     placeholder="URL obrazu"
                 />
-                <div className="button-container"> {/* Center buttons */}
+                <div className="button-container">
+                    {" "}
+                    {/* Center buttons */}
                     <ModalButton onClick={handleAddArtist}>Dodaj</ModalButton>
                     <ModalButton onClick={onClose}>Zamknij</ModalButton>
                 </div>

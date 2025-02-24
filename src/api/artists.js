@@ -25,6 +25,7 @@ export const addArtist = async (artist) => {
 // Function to fetch all artists for a specific stage
 export const getArtistsForStage = async (stageId) => {
     try {
+        console.log('stageId', stageId);
         const response = await fetch(`${API_URL}/${stageId}`);
         if (!response.ok) {
             throw new Error("Failed to fetch artists");

@@ -48,8 +48,14 @@ const Stage = () => {
     };
     const handleArtistAdded = async () => {
         // Reload the artist list after adding a new artist
-        await getArtistsForStage();
+        try {
+            const data = await getArtistsForStage(stageId);
+            setArtists(data);
+        } catch (error) {
+            console.error("Failed to refetch artists:", error);
+        }
     };
+
 
     return (
         <StageContainer>

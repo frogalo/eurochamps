@@ -5,8 +5,8 @@ export const CardContainer = styled.div`
     display: flex;
     flex-direction: row;
     align-items: center;
-    background-color: #e3e3e3;
-    border: 1px solid #ccc;
+    background-color: #dac6e7;
+    border: 1px solid #a18ec4;
     border-radius: 8px;
     padding: 1rem;
     margin: 0.5rem;
@@ -84,7 +84,7 @@ export const PlayButton = styled.a`
     border: none;
     color: #FF0000;
     cursor: pointer;
-    font-size: 1.5rem; /* Adjust size for the icon */
+    font-size: 2rem; /* Adjust size for the icon */
     transition: color 0.3s ease;
 
     &:hover {

@@ -11,17 +11,7 @@ const app = express();
 const allowedOrigin = 'http://38.242.213.59:3000';
 // Configure CORS
 const corsOptions = {
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-
-        // Check if the origin matches the allowed origin
-        if (allowedOrigin === origin) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: '*', // Allow all origins
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Specify allowed methods
     credentials: true, // Allow cookies to be sent
     optionsSuccessStatus: 204, // Some legacy browsers choke on 204

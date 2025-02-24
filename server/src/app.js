@@ -8,7 +8,7 @@ require('dotenv').config();
 const app = express();
 
 // Define allowed origin
-const allowedOrigin = 'http://38.242.213.59:3000';
+// const allowedOrigin = 'http://38.242.213.59:3000';
 // Configure CORS
 const corsOptions = {
     origin: '*', // Allow all origins
@@ -53,7 +53,7 @@ app.use('/api/artists', require('./routes/artists'));
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on port ${PORT}`);
 });
 

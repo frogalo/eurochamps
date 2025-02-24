@@ -8,7 +8,7 @@ require('dotenv').config();
 const app = express();
 
 // Define allowed origin
-const allowedOrigin = 'http://38.242.213.59';
+const allowedOrigin = 'http://38.242.213.59:3000';
 // Configure CORS
 const corsOptions = {
     origin: function (origin, callback) {

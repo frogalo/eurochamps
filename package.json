@@ -9,7 +9,6 @@
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "install-all": "npm install && cd client && npm install && cd ../server && npm install",
     "test": "cd server && npm test",
-
     "build": "cd client && npm run build",
     "start-prod": "pm2 start ecosystem.config.js",
     "stop-prod": "pm2 stop all",

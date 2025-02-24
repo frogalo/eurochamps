@@ -10,7 +10,7 @@ export const CardContainer = styled.div`
     border-radius: 8px;
     padding: 1rem;
     margin: 0.5rem;
-    width: 400px;
+    width: 350px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     position: relative; /* Add relative positioning */
 

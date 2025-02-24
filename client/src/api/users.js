@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000/api/users"; // Base URL for the API
+const API_URL = process.env.REACT_APP_API_URL + "/users"; // Base URL for the API
 
 // Function to add a new user
 export const addUser = async (name) => {

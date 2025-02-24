@@ -1,5 +1,4 @@
-const API_URL = "http://localhost:5000/api/stages"; // Base URL for the API
-
+const API_URL = process.env.REACT_APP_API_URL + "/stages"; // Base URL for the API
 // Function to add a new stage
 export const addStage = async (stage) => {
     try {

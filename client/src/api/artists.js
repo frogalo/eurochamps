@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000/api/artists"; // Base URL for the API
+const API_URL = process.env.REACT_APP_API_URL + "/artists"; // Base URL for the API
 
 // Function to add a new artist
 export const addArtist = async (artist) => {

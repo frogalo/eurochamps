@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000/api/years"; // Base URL for the API
+const API_URL = process.env.REACT_APP_API_URL + "/years"; // Base URL for the API
 
 // Function to add a new year
 export const addYear = async (year) => {

@@ -61,8 +61,6 @@ export const DraggableContainer = styled.div`
     }
   `}
 
-    @media (hover: hover) {
-    cursor: move;
 
     &:hover {
         transform: translateY(-2px);

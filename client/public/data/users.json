@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Iga",
+    "isAdmin": false
+  },
+  {
+    "name": "Wiktoria",
+    "isAdmin": false
+  },
+  {
+    "name": "Agata",
+    "isAdmin": false
+  },
+  {
+    "name": "Kasia",
+    "isAdmin": false
+  },
+  {
+    "name": "Kuba",
+    "isAdmin": true
+  },
+  {
+    "name": "Rafał",
+    "isAdmin": false
+  }
+]

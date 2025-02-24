@@ -1,0 +1,20 @@
+{
+  "years": [
+    {
+      "year": 2023,
+      "stages": [
+        { "id": "polfinal1", "title": "Półfinał 1" },
+        { "id": "polfinal2", "title": "Półfinał 2" },
+        { "id": "final", "title": "Finał" }
+      ]
+    },
+    {
+      "year": 2024,
+      "stages": [
+        { "id": "polfinal1", "title": "Półfinał 1" },
+        { "id": "polfinal2", "title": "Półfinał 2" },
+        { "id": "final", "title": "Finał" }
+      ]
+    }
+  ]
+}

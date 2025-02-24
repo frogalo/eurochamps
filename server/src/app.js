@@ -7,8 +7,27 @@ require('dotenv').config();
 
 const app = express();
 
+// Define allowed origin
+const allowedOrigin = 'http://38.242.213.59';
+// Configure CORS
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        // Check if the origin matches the allowed origin
+        if (allowedOrigin === origin) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Specify allowed methods
+    credentials: true, // Allow cookies to be sent
+    optionsSuccessStatus: 204, // Some legacy browsers choke on 204
+};
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(morgan('dev'));
 

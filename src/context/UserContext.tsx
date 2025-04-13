@@ -1,4 +1,3 @@
-// src/context/UserContext.tsx
 "use client";
 
 import {
@@ -9,69 +8,40 @@ import {
     ReactNode,
 } from "react";
 
-// Define the structure of a user
-interface User {
-    id: string;
-    name: string;
-    // Add other relevant user fields like email, avatar, etc.
-}
-
-// Define the shape of the context value
 interface UserContextType {
-    currentUser: User | null;
-    login: (user: User) => void;
+    currentUser: string | null;
+    login: (name: string) => void;
     logout: () => void;
 }
 
-// Create the context with a default value (null initially)
 export const UserContext = createContext<UserContextType | null>(null);
 
-// Create the provider component
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true); // To prevent hydration issues
+    const [currentUser, setCurrentUser] = useState<string | null>(null);
 
-    // Load user from localStorage on initial mount
     useEffect(() => {
-        try {
-            const storedUser = localStorage.getItem("currentUser");
-            if (storedUser) {
-                setCurrentUser(JSON.parse(storedUser));
-            }
-        } catch (error) {
-            console.error("Failed to parse user from localStorage", error);
-            localStorage.removeItem("currentUser"); // Clear corrupted data
-        } finally {
-            setLoading(false); // Finished loading
+        const storedUser = localStorage.getItem("currentUser");
+        if (storedUser) {
+            setCurrentUser(storedUser);
         }
-    }, []); // Empty dependency array ensures this runs only once on mount
+    }, []);
 
-    // Save user to localStorage whenever currentUser changes
+    // Save or remove the current user in localStorage based on state
     useEffect(() => {
-        if (!loading) {
-            // Only save after initial load is complete
-            if (currentUser) {
-                localStorage.setItem("currentUser", JSON.stringify(currentUser));
-            } else {
-                localStorage.removeItem("currentUser");
-            }
+        if (currentUser) {
+            localStorage.setItem("currentUser", currentUser);
+        } else {
+            localStorage.removeItem("currentUser");
         }
-    }, [currentUser, loading]);
+    }, [currentUser]);
 
-    // Login function
-    const login = (user: User) => {
-        setCurrentUser(user);
+    const login = (name: string) => {
+        setCurrentUser(name);
     };
 
-    // Logout function
     const logout = () => {
         setCurrentUser(null);
     };
-
-    // Don't render children until loading is complete to avoid hydration mismatch
-    if (loading) {
-        return null; // Or a loading spinner
-    }
 
     return (
         <UserContext.Provider value={{ currentUser, login, logout }}>
@@ -80,7 +50,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     );
 };
 
-// Custom hook for easier context usage
 export const useUser = () => {
     const context = useContext(UserContext);
     if (!context) {

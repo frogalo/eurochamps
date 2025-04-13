@@ -1,17 +1,18 @@
 "use client";
 
-import {useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
 import NameButton from "@/components/nameButton";
+import { useUser } from "@/context/UserContext";
 
-const mockNames = ["Iga", "Kasia", "Agata", "Kuba"];
+const mockNames = ["Iga", "Kasia", "Agata", "Kuba", "Wiktoria", "Rafał"];
 
 export default function NamePicker() {
     const router = useRouter();
+    const { login } = useUser();
 
     const handleSelectName = (name: string) => {
-        console.log("User selected:", name);
-        // Navigate to a ranking page with the chosen name.
-        router.push(`/ranking/${name.toLowerCase()}`);
+        login(name);
+        router.push(`/ranking/`);
     };
 
     return (
@@ -22,16 +23,10 @@ export default function NamePicker() {
                 color: "var(--text-color)",
             }}
         >
-
-
             {/* Name Buttons */}
             <div className="w-full space-y-4">
                 {mockNames.map((name) => (
-                    <NameButton
-                        key={name}
-                        name={name}
-                        onClick={() => handleSelectName(name)}
-                    />
+                    <NameButton key={name} name={name} onClick={() => handleSelectName(name)} />
                 ))}
             </div>
         </div>

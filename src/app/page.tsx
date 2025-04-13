@@ -1,25 +1,39 @@
 "use client";
 
-import { useContext } from "react";
-import { ThemeContext } from "@/context/ThemeContext";
+import {useRouter} from "next/navigation";
+import NameButton from "@/components/nameButton";
 
-export default function Home() {
-    const { theme, toggleTheme } = useContext(ThemeContext);
+const mockNames = ["Iga", "Kasia", "Agata", "Kuba"];
+
+export default function NamePicker() {
+    const router = useRouter();
+
+    const handleSelectName = (name: string) => {
+        console.log("User selected:", name);
+        // Navigate to a ranking page with the chosen name.
+        router.push(`/ranking/${name.toLowerCase()}`);
+    };
 
     return (
-        <div className="p-4 space-y-4">
-            <div className="flex justify-end mb-4">
-                <button
-                    className="px-4 py-2 rounded"
-                    style={{
-                        backgroundColor: theme === "light" ? "#33A65B" : "#D9A441",
-                    }}
-                    onClick={toggleTheme}
-                >
-                    {theme === "light" ? "🌙 Dark" : "☀️ Light"}
-                </button>
+        <div
+            className="min-h-screen flex flex-col items-center justify-center p-4 space-y-8"
+            style={{
+                backgroundColor: "var(--background)",
+                color: "var(--text-color)",
+            }}
+        >
+
+
+            {/* Name Buttons */}
+            <div className="w-full space-y-4">
+                {mockNames.map((name) => (
+                    <NameButton
+                        key={name}
+                        name={name}
+                        onClick={() => handleSelectName(name)}
+                    />
+                ))}
             </div>
-            {/* Existing artist list */}
         </div>
     );
 }

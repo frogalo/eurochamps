@@ -1,22 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { socket } from "@/socket";
-import { useUser } from "@/context/UserContext";
+import {useEffect, useState} from "react";
+import {useParams} from "next/navigation";
+import {socket} from "@/socket";
+import {useUser} from "@/context/UserContext";
+
+// Simple hash function to turn a string into a pseudo-random index.
+function getBgClass(name: string): string {
+    // Calculate a hash value based on char codes.
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    // Map the hash to one of 5 background classes.
+    const index = Math.abs(hash) % 5 + 1; // 1 to 5
+    return `user-bg-${index}`;
+}
 
 export default function StageDetail() {
-    const { currentUser } = useUser();
+    const {currentUser} = useUser();
     const params = useParams();
-    const stage = params.id || "Home";
+    const stage = decodeURIComponent(params.id || "Home");
     const storageKey = `connectedUsers-${stage}`;
 
     const [mounted, setMounted] = useState(false);
+    // The following two states are kept but are not used in this snippet:
     const [, setIsConnected] = useState<boolean>(false);
     const [, setTransport] = useState<string>("N/A");
     const [connectedUsers, setConnectedUsers] = useState<string[]>([]);
 
-    // On mount, mark as loaded and restore connectedUsers (for this room) from localStorage.
+    // On mount, load connectedUsers for this room from localStorage.
     useEffect(() => {
         setMounted(true);
         const stored = localStorage.getItem(storageKey);
@@ -32,22 +45,19 @@ export default function StageDetail() {
         }
     }, [storageKey]);
 
-    // Persist connectedUsers to localStorage whenever they update.
+    // Persist connectedUsers to localStorage on updates.
     useEffect(() => {
         if (mounted) {
             localStorage.setItem(storageKey, JSON.stringify(connectedUsers));
         }
     }, [connectedUsers, mounted, storageKey]);
 
-    // Before unload, request an updated list from the server.
+    // Update localStorage on page unload.
     useEffect(() => {
         const handleBeforeUnload = () => {
-            // Ask the server for an updated list.
-            socket.emit("getAllConnectedUsers", { stage });
-            // Write the current state to localStorage.
+            socket.emit("getAllConnectedUsers", {stage});
             localStorage.setItem(storageKey, JSON.stringify(connectedUsers));
         };
-
         window.addEventListener("beforeunload", handleBeforeUnload);
         return () => window.removeEventListener("beforeunload", handleBeforeUnload);
     }, [connectedUsers, storageKey, stage]);
@@ -63,14 +73,12 @@ export default function StageDetail() {
 
             const name = currentUser || "Guest";
 
-            // Clear any stale localStorage state for this room.
+            // Clear previous localStorage state.
             localStorage.removeItem(storageKey);
             setConnectedUsers([]);
 
-            // Emit join event; the server will emit "currentUsers" with the updated list.
-            socket.emit("join", { stage, name });
-
-            // Add the current user to the list.
+            // Emit join event and then add the current user.
+            socket.emit("join", {stage, name});
             setConnectedUsers([name]);
         }
 
@@ -82,12 +90,10 @@ export default function StageDetail() {
         socket.on("connect", onConnect);
         socket.on("disconnect", onDisconnect);
 
-        // When the server sends the full current list, replace the state.
         socket.on("currentUsers", (users: string[]) => {
             setConnectedUsers(users);
         });
 
-        // When another user joins, add them if not already present.
         socket.on("userJoined", (data: { name: string; stage?: string }) => {
             if (data.stage === stage) {
                 setConnectedUsers((prev) => {
@@ -99,7 +105,6 @@ export default function StageDetail() {
             }
         });
 
-        // When a user leaves, remove them from the state.
         socket.on("userLeft", (data: { name: string; stage?: string }) => {
             if (data.stage === stage) {
                 setConnectedUsers((prev) => prev.filter((n) => n !== data.name));
@@ -124,14 +129,11 @@ export default function StageDetail() {
     return (
         <div className="p-4">
             <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-2">Connected Users</h2>
+                <h2 className="text-center">{stage}</h2>
                 <div className="flex space-x-2">
                     {connectedUsers.map((name, index) => (
-                        <div
-                            key={index}
-                            className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center"
-                        >
-              <span className="text-xl font-bold">
+                        <div key={index} className={`connected-user ${getBgClass(name)}`}>
+              <span className="connected-user-letter">
                 {name.charAt(0).toUpperCase()}
               </span>
                         </div>

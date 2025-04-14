@@ -7,11 +7,12 @@
   --background: #ffffff;
   --text-color: #000000;
   --primary-accent: #2B558C; /* Eurovision Blue */
-  --primary-accent-shadow: #1a2d4b; /* Eurovision Blue */
+  --primary-accent-shadow: #1a2d4b;
   --secondary-accent: #33A65B; /* Eurovision Green */
   --tertiary-accent: #D9A441; /* Eurovision Yellow */
   --quaternary-accent: #D95829; /* Eurovision Orange */
   --quinary-accent: #D92525; /* Eurovision Red */
+  --additional-1-accent: #94339a;
 }
 
 /* Global Styles */
@@ -27,7 +28,7 @@ body {
   height: 100%;
 }
 
-/* Stylizacja przycisku */
+/* Button styles (example) */
 .custom-button {
   width: 100%;
   margin-bottom: 2rem;
@@ -59,8 +60,44 @@ body {
   background-color: var(--quaternary-accent);
 }
 
+/* Extra text style */
 .extra {
   font-size: 11px;
   margin-top: 4px;
   opacity: 0.8;
+}
+
+/* Connected User Circle Default Styles */
+.connected-user {
+  height: 2.5rem;  /* h-10 */
+  width: 2.5rem;   /* w-10 */
+  border-radius: 9999px; /* rounded-full */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Connected User Letter styling */
+.connected-user-letter {
+  font-size: 1.25rem; /* text-xl */
+  font-weight: 700;   /* font-bold */
+  color: var(--text-color);
+}
+
+
+
+.user-bg-1 {
+  background-color: var(--primary-accent);
+}
+.user-bg-2 {
+  background-color: var(--secondary-accent);
+}
+.user-bg-3 {
+  background-color: var(--quaternary-accent);
+}
+.user-bg-4 {
+  background-color: var(--quinary-accent);
+}
+.user-bg-5 {
+  background-color: var(--additional-1-accent);
 }

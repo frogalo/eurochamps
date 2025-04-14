@@ -30,7 +30,10 @@ export default function Stage() {
     const { logout } = useUser();
 
     const handleStageClick = (stageName: string) => {
-        router.push(`/etap?stage=${encodeURIComponent(stageName)}`);
+        if (stageName) {
+            // Przekierowanie do dynamicznej strony /etap/[id]
+            router.push(`/etap/${encodeURIComponent(stageName)}`);
+        }
     };
 
     const handleChangeUser = () => {

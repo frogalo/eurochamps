@@ -1,9 +1,14 @@
 "use client";
 
-import {useEffect, useState} from "react";
-import {useParams} from "next/navigation";
-import {socket} from "@/socket";
-import {useUser} from "@/context/UserContext";
+interface UpgradeInfo {
+    name: string;
+    // add any other properties you might use
+}
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { socket } from "@/socket";
+import { useUser } from "@/context/UserContext";
 
 // Simple hash function to turn a string into a pseudo-random index.
 function getBgClass(name: string): string {
@@ -18,9 +23,15 @@ function getBgClass(name: string): string {
 }
 
 export default function StageDetail() {
-    const {currentUser} = useUser();
+    const { currentUser } = useUser();
     const params = useParams();
-    const stage = decodeURIComponent(params.id || "Home");
+    const stageParam =
+        typeof params.id === "string"
+            ? params.id
+            : Array.isArray(params.id)
+                ? params.id[0]
+                : "Home";
+    const stage = decodeURIComponent(stageParam);
     const storageKey = `connectedUsers-${stage}`;
 
     const [mounted, setMounted] = useState(false);
@@ -55,11 +66,12 @@ export default function StageDetail() {
     // Update localStorage on page unload.
     useEffect(() => {
         const handleBeforeUnload = () => {
-            socket.emit("getAllConnectedUsers", {stage});
+            socket.emit("getAllConnectedUsers", { stage });
             localStorage.setItem(storageKey, JSON.stringify(connectedUsers));
         };
         window.addEventListener("beforeunload", handleBeforeUnload);
-        return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+        return () =>
+            window.removeEventListener("beforeunload", handleBeforeUnload);
     }, [connectedUsers, storageKey, stage]);
 
     // Socket event listeners.
@@ -67,7 +79,7 @@ export default function StageDetail() {
         function onConnect() {
             setIsConnected(true);
             setTransport(socket.io.engine.transport.name);
-            socket.io.engine.on("upgrade", (upgradeInfo: any) => {
+            socket.io.engine.on("upgrade", (upgradeInfo: UpgradeInfo) => {
                 setTransport(upgradeInfo.name);
             });
 
@@ -78,7 +90,7 @@ export default function StageDetail() {
             setConnectedUsers([]);
 
             // Emit join event and then add the current user.
-            socket.emit("join", {stage, name});
+            socket.emit("join", { stage, name });
             setConnectedUsers([name]);
         }
 

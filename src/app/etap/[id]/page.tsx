@@ -141,7 +141,7 @@ export default function StageDetail() {
         <section className="section-panel empty-panel">
           <p className="eyebrow">Brak etapu</p>
           <h1 className="display-title">Taki etap nie istnieje.</h1>
-          <Button text="Wroc do lobby" onClick={() => router.push("/etap")} />
+          <Button text="Wróć do lobby" onClick={() => router.push("/etap")} />
         </section>
       </main>
     );
@@ -196,14 +196,14 @@ export default function StageDetail() {
         </div>
         <div className="header-actions">
           <Button
-            text="Wroc do lobby"
-            eyebrow="Drugorzedne"
+            text="Wróć do lobby"
+            eyebrow="Drugorzędne"
             variant="secondary"
             onClick={() => router.push("/etap")}
           />
           <div className="live-chip">
             <span className={`live-dot ${isConnected ? "live-dot-active" : ""}`} />
-            {isConnected ? "Polaczono" : "Ponowne laczenie"}
+            {isConnected ? "Połączono" : "Ponowne łączenie"}
           </div>
         </div>
       </section>
@@ -211,8 +211,8 @@ export default function StageDetail() {
       <section className="dashboard-grid">
         <div className="section-panel presence-panel">
           <div className="section-heading">
-            <p className="section-kicker">Publicznosc na zywo</p>
-            <h2 className="section-title">Obecnosc w etapie</h2>
+            <p className="section-kicker">Publiczność na żywo</p>
+            <h2 className="section-title">Obecność w etapie</h2>
           </div>
           <div className="audience-row">
             {connectedUsers.map((name) => (
@@ -222,8 +222,8 @@ export default function StageDetail() {
             ))}
           </div>
           <p className="support-copy">
-            Polaczono: {connectedUsers.length}{" "}
-            {connectedUsers.length === 1 ? "widza" : "widzow"} obserwujacych ten
+            Połączono: {connectedUsers.length}{" "}
+            {connectedUsers.length === 1 ? "widza" : "widzów"} obserwujących ten
             etap.
           </p>
         </div>
@@ -231,24 +231,24 @@ export default function StageDetail() {
         <div className="section-panel summary-panel">
           <div className="section-heading">
             <p className="section-kicker">Status ocen</p>
-            <h2 className="section-title">Twoj ranking</h2>
+            <h2 className="section-title">Twój ranking</h2>
           </div>
           <div className="summary-metrics">
             <div className="metric-card">
-              <span className="metric-label">Ukonczono</span>
+              <span className="metric-label">Ukończono</span>
               <strong>{scoredEntries}/{stage.entries.length}</strong>
             </div>
             <div className="metric-card">
-              <span className="metric-label">Najwyzsza nota</span>
+              <span className="metric-label">Najwyższa nota</span>
               <strong>{leaderboard[0]?.score ?? 0} pkt</strong>
             </div>
             <div className="metric-card">
               <span className="metric-label">Status</span>
-              <strong>{voteState.submittedAt ? "Wyslane" : "W trakcie"}</strong>
+              <strong>{voteState.submittedAt ? "Wysłane" : "W trakcie"}</strong>
             </div>
           </div>
           <Button
-            text={voteState.submittedAt ? "Aktualizuj zgloszenie" : "Zatwierdz oceny"}
+            text={voteState.submittedAt ? "Aktualizuj zgłoszenie" : "Zatwierdź oceny"}
             onClick={handleSubmitVotes}
             disabled={!canSubmit}
           />
@@ -272,7 +272,7 @@ export default function StageDetail() {
       <section className="section-panel board-panel">
         <div className="section-heading">
           <p className="section-kicker">Ranking</p>
-          <h2 className="section-title">Aktualna kolejnosc</h2>
+          <h2 className="section-title">Aktualna kolejność</h2>
         </div>
         <div className="leaderboard-list">
           {restOfBoard.map((entry, index) => (

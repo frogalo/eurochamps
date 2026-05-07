@@ -34,19 +34,18 @@ export default function RegisterPage() {
 
     const normalizedUsername = username.trim();
     const normalizedDisplayName = displayName.trim();
-
     if (!normalizedUsername || !password) {
-      setError("Wpisz nazwe uzytkownika i haslo.");
+      setError("Wpisz nazwę użytkownika i hasło.");
       return;
     }
-
+ 
     if (password.length < 6) {
-      setError("Haslo musi miec co najmniej 6 znakow.");
+      setError("Hasło musi mieć co najmniej 6 znaków.");
       return;
     }
-
+ 
     if (password !== confirmPassword) {
-      setError("Hasla musza byc takie same.");
+      setError("Hasła muszą być takie same.");
       return;
     }
 
@@ -72,14 +71,14 @@ export default function RegisterPage() {
       };
 
       if (!response.ok || !data.user) {
-        setError(data.error ?? "Nie udalo sie utworzyc konta.");
+        setError(data.error ?? "Nie udało się utworzyć konta.");
         return;
       }
-
+ 
       login(data.user.displayName);
       router.push("/etap");
     } catch {
-      setError("Rejestracja jest teraz niedostepna.");
+      setError("Rejestracja jest teraz niedostępna.");
     } finally {
       setIsSubmitting(false);
     }
@@ -96,7 +95,7 @@ export default function RegisterPage() {
       <div className="login-aurora login-aurora-tertiary" />
 
       <section className="login-brand">
-        <p className="login-kicker">Dolacz do euro champs</p>
+        <p className="login-kicker">Dołącz do euro champs</p>
         <h1 className="login-title">
           euro
           <span>champs</span>
@@ -108,9 +107,9 @@ export default function RegisterPage() {
         <div className="login-card-content">
           <div className="login-heading">
             <p className="section-kicker">Rejestracja</p>
-            <h2 className="section-title">Utworz nowe konto</h2>
+            <h2 className="section-title">Utwórz nowe konto</h2>
             <p className="hero-text">
-              Podaj dane konta, aby od razu wejsc do panelu ocen.
+              Podaj dane konta, aby od razu wejść do panelu ocen.
             </p>
           </div>
 
@@ -130,7 +129,7 @@ export default function RegisterPage() {
             </label>
 
             <label className="field-shell" htmlFor="displayName">
-              <span className="field-label">Nazwa wyswietlana</span>
+              <span className="field-label">Nazwa wyświetlana</span>
               <div className="login-input-wrap">
                 <span className="login-input-icon">*</span>
                 <input
@@ -145,14 +144,14 @@ export default function RegisterPage() {
             </label>
 
             <label className="field-shell" htmlFor="password">
-              <span className="field-label">Haslo</span>
+              <span className="field-label">Hasło</span>
               <div className="login-input-wrap">
                 <span className="login-input-icon">#</span>
                 <input
                   id="password"
                   className="field-input login-input"
                   type="password"
-                  placeholder="minimum 6 znakow"
+                  placeholder="minimum 6 znaków"
                   autoComplete="new-password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
@@ -161,14 +160,14 @@ export default function RegisterPage() {
             </label>
 
             <label className="field-shell" htmlFor="confirmPassword">
-              <span className="field-label">Powtorz haslo</span>
+              <span className="field-label">Powtórz hasło</span>
               <div className="login-input-wrap">
                 <span className="login-input-icon">#</span>
                 <input
                   id="confirmPassword"
                   className="field-input login-input"
                   type="password"
-                  placeholder="powtorz haslo"
+                  placeholder="powtórz hasło"
                   autoComplete="new-password"
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
@@ -179,7 +178,7 @@ export default function RegisterPage() {
             {error && <p className="login-error">{error}</p>}
 
             <Button
-              text={isSubmitting ? "Tworzenie konta..." : "Utworz konto"}
+              text={isSubmitting ? "Tworzenie konta..." : "Utwórz konto"}
               type="submit"
               disabled={isSubmitting}
               className="login-submit"
@@ -187,12 +186,12 @@ export default function RegisterPage() {
           </form>
 
           <div className="login-divider">
-            <span>Masz juz konto?</span>
+            <span>Masz już konto?</span>
           </div>
 
           <footer className="login-footer">
             <Button
-              text="Wroc do logowania"
+              text="Wróć do logowania"
               variant="secondary"
               onClick={() => router.push("/")}
             />

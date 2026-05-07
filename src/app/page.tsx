@@ -59,14 +59,14 @@ export default function LoginPage() {
       };
 
       if (!response.ok || !data.user) {
-        setError(data.error ?? "Nie udalo sie zalogowac.");
+        setError(data.error ?? "Nie można się zalogować.");
         return;
       }
 
       login(data.user.displayName);
       router.push("/etap");
     } catch {
-      setError("Logowanie jest teraz niedostepne.");
+      setError("W tej chwili nie można się zalogować.");
     } finally {
       setIsSubmitting(false);
     }
@@ -83,7 +83,7 @@ export default function LoginPage() {
       <div className="login-aurora login-aurora-tertiary" />
 
       <section className="login-brand">
-        <p className="login-kicker">Scena juz czeka</p>
+        <p className="login-kicker">Elektryczna scena czeka</p>
         <h1 className="login-title">
           euro
           <span>champs</span>
@@ -94,23 +94,22 @@ export default function LoginPage() {
         <div className="login-card-glass" />
         <div className="login-card-content">
           <div className="login-heading">
-            <p className="section-kicker">Logowanie</p>
-            <h2 className="section-title">Wejdz do swojego panelu ocen</h2>
+            <p className="section-kicker">Zaloguj się</p>
+            <h2 className="section-title">Wejdź do swojego panelu ocen</h2>
             <p className="hero-text">
-              Zaloguj sie na konto Eurochamps, aby oceniac artystow i zachowac
-              synchronizacje swojego rankingu.
+              Zaloguj się na swoje konto Eurochamps, aby oceniać artystów i
+              synchronizować swoją tablicę.
             </p>
           </div>
 
           <form className="login-form" onSubmit={handleSubmit}>
             <label className="field-shell" htmlFor="username">
-              <span className="field-label">Nazwa uzytkownika</span>
+              <span className="field-label">Nazwa użytkownika</span>
               <div className="login-input-wrap">
-                <span className="login-input-icon">@</span>
                 <input
                   id="username"
                   className="field-input login-input"
-                  placeholder="douze.points"
+                  placeholder="nazwa użytkownika"
                   autoComplete="username"
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
@@ -119,14 +118,14 @@ export default function LoginPage() {
             </label>
 
             <label className="field-shell" htmlFor="password">
-              <span className="field-label">Haslo</span>
+              <span className="field-label">Hasło</span>
               <div className="login-input-wrap">
                 <span className="login-input-icon">#</span>
                 <input
                   id="password"
                   className="field-input login-input login-input-password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="........"
+                  placeholder="••••••••"
                   autoComplete="current-password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
@@ -135,9 +134,9 @@ export default function LoginPage() {
                   type="button"
                   className="login-visibility-toggle"
                   onClick={() => setShowPassword((value) => !value)}
-                  aria-label={showPassword ? "Ukryj haslo" : "Pokaz haslo"}
+                  aria-label={showPassword ? "Ukryj hasło" : "Pokaż hasło"}
                 >
-                  {showPassword ? "Ukryj" : "Pokaz"}
+                  {showPassword ? "Ukryj" : "Pokaż"}
                 </button>
               </div>
             </label>
@@ -145,7 +144,8 @@ export default function LoginPage() {
             {error && <p className="login-error">{error}</p>}
 
             <Button
-              text={isSubmitting ? "Logowanie..." : "Zaloguj sie"}
+              text={isSubmitting ? "Logowanie..." : "Zaloguj się"}
+              eyebrow="Główny"
               type="submit"
               disabled={isSubmitting}
               className="login-submit"
@@ -158,13 +158,8 @@ export default function LoginPage() {
 
           <footer className="login-footer">
             <p>
-              Nie masz konta? Zarejestruj sie tutaj.
+              Potrzebujesz konta? Dodaj lub utwórz użytkownika w Prisma, a następnie zaloguj się tutaj.
             </p>
-            <Button
-              text="Przejdz do rejestracji"
-              variant="secondary"
-              onClick={() => router.push("/rejestracja")}
-            />
           </footer>
         </div>
       </section>

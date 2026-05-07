@@ -17,7 +17,7 @@ type StageStatus = "ready" | "draft" | "submitted";
 const STATUS_LABELS: Record<StageStatus, string> = {
   ready: "Gotowe",
   draft: "Szkic",
-  submitted: "Wyslane",
+  submitted: "Wysłane",
 };
 
 export default function Stage() {
@@ -78,7 +78,7 @@ export default function Stage() {
           <p className="eyebrow">Lobby areny</p>
           <h1 className="display-title">Wybierz dzisiejszy etap.</h1>
           <p className="hero-text">
-            Kazdy etap ma wlasny ranking na zywo, liste obecnych widzow i
+            Każdy etap ma własny ranking na żywo, listę obecnych widzów i
             zapisane noty dla <strong>{currentUser}</strong>.
           </p>
         </div>
@@ -88,8 +88,8 @@ export default function Stage() {
             <strong>{currentUser}</strong>
           </div>
           <Button
-            text="Zmien uzytkownika"
-            eyebrow="Drugorzedne"
+            text="Zmień użytkownika"
+            eyebrow="Drugorzędne"
             variant="secondary"
             onClick={handleChangeUser}
           />
@@ -126,7 +126,7 @@ export default function Stage() {
               <p className="stage-card-round">{stage.round}</p>
               <p className="stage-card-copy">{stage.description}</p>
               <div className="stage-card-footer">
-                <span className="metric-label">Ocenione wystepy</span>
+                <span className="metric-label">Ocenione występy</span>
                 <strong>{progress}/{stage.entries.length}</strong>
               </div>
             </button>

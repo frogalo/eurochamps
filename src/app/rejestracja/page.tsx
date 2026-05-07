@@ -6,13 +6,14 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
 import { useUser } from "@/context/UserContext";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
   const { currentUser, login } = useUser();
   const [mounted, setMounted] = useState(false);
   const [username, setUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,9 +33,20 @@ export default function LoginPage() {
     event.preventDefault();
 
     const normalizedUsername = username.trim();
+    const normalizedDisplayName = displayName.trim();
 
     if (!normalizedUsername || !password) {
       setError("Wpisz nazwe uzytkownika i haslo.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Haslo musi miec co najmniej 6 znakow.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Hasla musza byc takie same.");
       return;
     }
 
@@ -42,13 +54,14 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           username: normalizedUsername,
+          displayName: normalizedDisplayName || undefined,
           password,
         }),
       });
@@ -59,14 +72,14 @@ export default function LoginPage() {
       };
 
       if (!response.ok || !data.user) {
-        setError(data.error ?? "Nie udalo sie zalogowac.");
+        setError(data.error ?? "Nie udalo sie utworzyc konta.");
         return;
       }
 
       login(data.user.displayName);
       router.push("/etap");
     } catch {
-      setError("Logowanie jest teraz niedostepne.");
+      setError("Rejestracja jest teraz niedostepna.");
     } finally {
       setIsSubmitting(false);
     }
@@ -83,7 +96,7 @@ export default function LoginPage() {
       <div className="login-aurora login-aurora-tertiary" />
 
       <section className="login-brand">
-        <p className="login-kicker">Scena juz czeka</p>
+        <p className="login-kicker">Dolacz do euro champs</p>
         <h1 className="login-title">
           euro
           <span>champs</span>
@@ -94,26 +107,39 @@ export default function LoginPage() {
         <div className="login-card-glass" />
         <div className="login-card-content">
           <div className="login-heading">
-            <p className="section-kicker">Logowanie</p>
-            <h2 className="section-title">Wejdz do swojego panelu ocen</h2>
+            <p className="section-kicker">Rejestracja</p>
+            <h2 className="section-title">Utworz nowe konto</h2>
             <p className="hero-text">
-              Zaloguj sie na konto Eurochamps, aby oceniac artystow i zachowac
-              synchronizacje swojego rankingu.
+              Podaj dane konta, aby od razu wejsc do panelu ocen.
             </p>
           </div>
 
           <form className="login-form" onSubmit={handleSubmit}>
             <label className="field-shell" htmlFor="username">
-              <span className="field-label">Nazwa uzytkownika</span>
+              <span className="field-label">Nazwa użytkownika</span>
               <div className="login-input-wrap">
-                <span className="login-input-icon">@</span>
                 <input
                   id="username"
                   className="field-input login-input"
-                  placeholder="douze.points"
+                  placeholder="nazwa użytkownika"
                   autoComplete="username"
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
+                />
+              </div>
+            </label>
+
+            <label className="field-shell" htmlFor="displayName">
+              <span className="field-label">Nazwa wyswietlana</span>
+              <div className="login-input-wrap">
+                <span className="login-input-icon">*</span>
+                <input
+                  id="displayName"
+                  className="field-input login-input"
+                  placeholder="np. Janek"
+                  autoComplete="nickname"
+                  value={displayName}
+                  onChange={(event) => setDisplayName(event.target.value)}
                 />
               </div>
             </label>
@@ -124,28 +150,36 @@ export default function LoginPage() {
                 <span className="login-input-icon">#</span>
                 <input
                   id="password"
-                  className="field-input login-input login-input-password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="........"
-                  autoComplete="current-password"
+                  className="field-input login-input"
+                  type="password"
+                  placeholder="minimum 6 znakow"
+                  autoComplete="new-password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                 />
-                <button
-                  type="button"
-                  className="login-visibility-toggle"
-                  onClick={() => setShowPassword((value) => !value)}
-                  aria-label={showPassword ? "Ukryj haslo" : "Pokaz haslo"}
-                >
-                  {showPassword ? "Ukryj" : "Pokaz"}
-                </button>
+              </div>
+            </label>
+
+            <label className="field-shell" htmlFor="confirmPassword">
+              <span className="field-label">Powtorz haslo</span>
+              <div className="login-input-wrap">
+                <span className="login-input-icon">#</span>
+                <input
+                  id="confirmPassword"
+                  className="field-input login-input"
+                  type="password"
+                  placeholder="powtorz haslo"
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                />
               </div>
             </label>
 
             {error && <p className="login-error">{error}</p>}
 
             <Button
-              text={isSubmitting ? "Logowanie..." : "Zaloguj sie"}
+              text={isSubmitting ? "Tworzenie konta..." : "Utworz konto"}
               type="submit"
               disabled={isSubmitting}
               className="login-submit"
@@ -153,17 +187,14 @@ export default function LoginPage() {
           </form>
 
           <div className="login-divider">
-            <span>Konto Eurochamps</span>
+            <span>Masz juz konto?</span>
           </div>
 
           <footer className="login-footer">
-            <p>
-              Nie masz konta? Zarejestruj sie tutaj.
-            </p>
             <Button
-              text="Przejdz do rejestracji"
+              text="Wroc do logowania"
               variant="secondary"
-              onClick={() => router.push("/rejestracja")}
+              onClick={() => router.push("/")}
             />
           </footer>
         </div>

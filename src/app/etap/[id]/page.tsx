@@ -1,157 +1,332 @@
 "use client";
 
-interface UpgradeInfo {
-    name: string;
-    // add any other properties you might use
-}
+import { ChangeEvent, useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { socket } from "@/socket";
+import Button from "@/components/Button";
 import { useUser } from "@/context/UserContext";
+import { getStageById } from "@/lib/stages";
+import {
+  buildLeaderboard,
+  countScoredEntries,
+  createEmptyVoteState,
+  readVoteState,
+  voteStorageKey,
+  type VoteState,
+} from "@/lib/votes";
+import { socket } from "@/socket";
 
-// Simple hash function to turn a string into a pseudo-random index.
-function getBgClass(name: string): string {
-    // Calculate a hash value based on char codes.
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-        hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    // Map the hash to one of 5 background classes.
-    const index = Math.abs(hash) % 5 + 1; // 1 to 5
-    return `user-bg-${index}`;
+function getAudienceTone(name: string) {
+  let hash = 0;
+
+  for (let index = 0; index < name.length; index += 1) {
+    hash = name.charCodeAt(index) + ((hash << 5) - hash);
+  }
+
+  return `audience-tone-${(Math.abs(hash) % 4) + 1}`;
 }
 
 export default function StageDetail() {
-    const { currentUser } = useUser();
-    const params = useParams();
-    const stageParam =
-        typeof params.id === "string"
-            ? params.id
-            : Array.isArray(params.id)
-                ? params.id[0]
-                : "Home";
-    const stage = decodeURIComponent(stageParam);
-    const storageKey = `connectedUsers-${stage}`;
+  const { currentUser } = useUser();
+  const router = useRouter();
+  const params = useParams();
+  const stageId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const stage = typeof stageId === "string" ? getStageById(stageId) : null;
 
-    const [mounted, setMounted] = useState(false);
-    // The following two states are kept but are not used in this snippet:
-    const [, setIsConnected] = useState<boolean>(false);
-    const [, setTransport] = useState<string>("N/A");
-    const [connectedUsers, setConnectedUsers] = useState<string[]>([]);
+  const [mounted, setMounted] = useState(false);
+  const [isConnected, setIsConnected] = useState(socket.connected);
+  const [connectedUsers, setConnectedUsers] = useState<string[]>([]);
+  const [voteState, setVoteState] = useState<VoteState>(
+    stage
+      ? createEmptyVoteState(stage.entries)
+      : { scores: {}, updatedAt: null, submittedAt: null }
+  );
 
-    // On mount, load connectedUsers for this room from localStorage.
-    useEffect(() => {
-        setMounted(true);
-        const stored = localStorage.getItem(storageKey);
-        if (stored) {
-            try {
-                const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed)) {
-                    setConnectedUsers(parsed);
-                }
-            } catch (err) {
-                console.error("Error parsing connectedUsers:", err);
-            }
-        }
-    }, [storageKey]);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-    // Persist connectedUsers to localStorage on updates.
-    useEffect(() => {
-        if (mounted) {
-            localStorage.setItem(storageKey, JSON.stringify(connectedUsers));
-        }
-    }, [connectedUsers, mounted, storageKey]);
+  useEffect(() => {
+    if (!mounted) {
+      return;
+    }
 
-    // Update localStorage on page unload.
-    useEffect(() => {
-        const handleBeforeUnload = () => {
-            socket.emit("getAllConnectedUsers", { stage });
-            localStorage.setItem(storageKey, JSON.stringify(connectedUsers));
-        };
-        window.addEventListener("beforeunload", handleBeforeUnload);
-        return () =>
-            window.removeEventListener("beforeunload", handleBeforeUnload);
-    }, [connectedUsers, storageKey, stage]);
+    if (!currentUser) {
+      router.replace("/");
+      return;
+    }
 
-    // Socket event listeners.
-    useEffect(() => {
-        function onConnect() {
-            setIsConnected(true);
-            setTransport(socket.io.engine.transport.name);
-            socket.io.engine.on("upgrade", (upgradeInfo: UpgradeInfo) => {
-                setTransport(upgradeInfo.name);
-            });
+    if (!stage) {
+      return;
+    }
 
-            const name = currentUser || "Guest";
+    const storedState = localStorage.getItem(voteStorageKey(currentUser, stage.id));
+    setVoteState(readVoteState(storedState, stage.entries));
+  }, [currentUser, mounted, router, stage]);
 
-            // Clear previous localStorage state.
-            localStorage.removeItem(storageKey);
-            setConnectedUsers([]);
+  useEffect(() => {
+    if (!mounted || !currentUser || !stage) {
+      return;
+    }
 
-            // Emit join event and then add the current user.
-            socket.emit("join", { stage, name });
-            setConnectedUsers([name]);
-        }
-
-        function onDisconnect() {
-            setIsConnected(false);
-            setTransport("N/A");
-        }
-
-        socket.on("connect", onConnect);
-        socket.on("disconnect", onDisconnect);
-
-        socket.on("currentUsers", (users: string[]) => {
-            setConnectedUsers(users);
-        });
-
-        socket.on("userJoined", (data: { name: string; stage?: string }) => {
-            if (data.stage === stage) {
-                setConnectedUsers((prev) => {
-                    if (!prev.includes(data.name)) {
-                        return [...prev, data.name];
-                    }
-                    return prev;
-                });
-            }
-        });
-
-        socket.on("userLeft", (data: { name: string; stage?: string }) => {
-            if (data.stage === stage) {
-                setConnectedUsers((prev) => prev.filter((n) => n !== data.name));
-            }
-        });
-
-        if (socket.connected) {
-            onConnect();
-        }
-
-        return () => {
-            socket.off("connect", onConnect);
-            socket.off("disconnect", onDisconnect);
-            socket.off("currentUsers");
-            socket.off("userJoined");
-            socket.off("userLeft");
-        };
-    }, [stage, currentUser, mounted]);
-
-    if (!mounted) return null;
-
-    return (
-        <div className="p-4">
-            <div className="mb-6">
-                <h2 className="text-center">{stage}</h2>
-                <div className="flex space-x-2">
-                    {connectedUsers.map((name, index) => (
-                        <div key={index} className={`connected-user ${getBgClass(name)}`}>
-              <span className="connected-user-letter">
-                {name.charAt(0).toUpperCase()}
-              </span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
+    localStorage.setItem(
+      voteStorageKey(currentUser, stage.id),
+      JSON.stringify(voteState)
     );
+  }, [currentUser, mounted, stage, voteState]);
+
+  useEffect(() => {
+    if (!currentUser || !stage) {
+      return;
+    }
+
+    const joinRoom = () => {
+      setIsConnected(true);
+      socket.emit("join", { stage: stage.id, name: currentUser });
+    };
+
+    const handleDisconnect = () => {
+      setIsConnected(false);
+    };
+
+    const handleCurrentUsers = (users: string[]) => {
+      setConnectedUsers(users);
+    };
+
+    const handleUserJoined = (data: { name: string; stage?: string }) => {
+      if (data.stage !== stage.id) {
+        return;
+      }
+
+      setConnectedUsers((previous) =>
+        previous.includes(data.name) ? previous : [...previous, data.name]
+      );
+    };
+
+    const handleUserLeft = (data: { name: string; stage?: string }) => {
+      if (data.stage !== stage.id) {
+        return;
+      }
+
+      setConnectedUsers((previous) => previous.filter((name) => name !== data.name));
+    };
+
+    socket.on("connect", joinRoom);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("currentUsers", handleCurrentUsers);
+    socket.on("userJoined", handleUserJoined);
+    socket.on("userLeft", handleUserLeft);
+
+    if (socket.connected) {
+      joinRoom();
+    }
+
+    return () => {
+      socket.emit("leaveStage", { stage: stage.id, name: currentUser });
+      socket.off("connect", joinRoom);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("currentUsers", handleCurrentUsers);
+      socket.off("userJoined", handleUserJoined);
+      socket.off("userLeft", handleUserLeft);
+    };
+  }, [currentUser, stage]);
+
+  if (!mounted || !currentUser) {
+    return null;
+  }
+
+  if (!stage) {
+    return (
+      <main className="app-shell">
+        <section className="section-panel empty-panel">
+          <p className="eyebrow">Brak etapu</p>
+          <h1 className="display-title">Taki etap nie istnieje.</h1>
+          <Button text="Wroc do lobby" onClick={() => router.push("/etap")} />
+        </section>
+      </main>
+    );
+  }
+
+  const scoredEntries = countScoredEntries(stage.entries, voteState.scores);
+  const leaderboard = buildLeaderboard(stage.entries, voteState.scores);
+  const podium = leaderboard.slice(0, 3);
+  const restOfBoard = leaderboard.slice(3);
+  const canSubmit = scoredEntries === stage.entries.length;
+
+  const handleScoreChange = (entryId: string, event: ChangeEvent<HTMLInputElement>) => {
+    const rawValue = event.target.value;
+    const parsedValue = rawValue === "" ? null : Number(rawValue);
+    const nextScore =
+      parsedValue === null || Number.isNaN(parsedValue)
+        ? null
+        : Math.max(0, Math.min(12, parsedValue));
+
+    setVoteState((previous) => ({
+      scores: {
+        ...previous.scores,
+        [entryId]: nextScore,
+      },
+      updatedAt: new Date().toISOString(),
+      submittedAt:
+        previous.submittedAt && previous.scores[entryId] !== nextScore
+          ? null
+          : previous.submittedAt,
+    }));
+  };
+
+  const handleSubmitVotes = () => {
+    if (!canSubmit) {
+      return;
+    }
+
+    setVoteState((previous) => ({
+      ...previous,
+      updatedAt: new Date().toISOString(),
+      submittedAt: new Date().toISOString(),
+    }));
+  };
+
+  return (
+    <main className="app-shell">
+      <section className="stage-detail-header">
+        <div className="hero-copy">
+          <p className="eyebrow">{stage.round}</p>
+          <h1 className="display-title">{stage.name}</h1>
+          <p className="hero-text">{stage.tagline}</p>
+        </div>
+        <div className="header-actions">
+          <Button
+            text="Wroc do lobby"
+            eyebrow="Drugorzedne"
+            variant="secondary"
+            onClick={() => router.push("/etap")}
+          />
+          <div className="live-chip">
+            <span className={`live-dot ${isConnected ? "live-dot-active" : ""}`} />
+            {isConnected ? "Polaczono" : "Ponowne laczenie"}
+          </div>
+        </div>
+      </section>
+
+      <section className="dashboard-grid">
+        <div className="section-panel presence-panel">
+          <div className="section-heading">
+            <p className="section-kicker">Publicznosc na zywo</p>
+            <h2 className="section-title">Obecnosc w etapie</h2>
+          </div>
+          <div className="audience-row">
+            {connectedUsers.map((name) => (
+              <div key={name} className={`audience-pill ${getAudienceTone(name)}`}>
+                <span>{name.slice(0, 1).toUpperCase()}</span>
+              </div>
+            ))}
+          </div>
+          <p className="support-copy">
+            Polaczono: {connectedUsers.length}{" "}
+            {connectedUsers.length === 1 ? "widza" : "widzow"} obserwujacych ten
+            etap.
+          </p>
+        </div>
+
+        <div className="section-panel summary-panel">
+          <div className="section-heading">
+            <p className="section-kicker">Status ocen</p>
+            <h2 className="section-title">Twoj ranking</h2>
+          </div>
+          <div className="summary-metrics">
+            <div className="metric-card">
+              <span className="metric-label">Ukonczono</span>
+              <strong>{scoredEntries}/{stage.entries.length}</strong>
+            </div>
+            <div className="metric-card">
+              <span className="metric-label">Najwyzsza nota</span>
+              <strong>{leaderboard[0]?.score ?? 0} pkt</strong>
+            </div>
+            <div className="metric-card">
+              <span className="metric-label">Status</span>
+              <strong>{voteState.submittedAt ? "Wyslane" : "W trakcie"}</strong>
+            </div>
+          </div>
+          <Button
+            text={voteState.submittedAt ? "Aktualizuj zgloszenie" : "Zatwierdz oceny"}
+            onClick={handleSubmitVotes}
+            disabled={!canSubmit}
+          />
+        </div>
+      </section>
+
+      <section className="leaderboard-shell">
+        {podium.map((entry, index) => (
+          <article
+            key={entry.id}
+            className={`podium-card podium-rank-${index + 1}`}
+          >
+            <span className="podium-rank">#{index + 1}</span>
+            <strong>{entry.country}</strong>
+            <span>{entry.artist}</span>
+            <em>{entry.score} pkt</em>
+          </article>
+        ))}
+      </section>
+
+      <section className="section-panel board-panel">
+        <div className="section-heading">
+          <p className="section-kicker">Ranking</p>
+          <h2 className="section-title">Aktualna kolejnosc</h2>
+        </div>
+        <div className="leaderboard-list">
+          {restOfBoard.map((entry, index) => (
+            <div key={entry.id} className="leaderboard-row">
+              <span className="leaderboard-rank">{index + 4}</span>
+              <div className="leaderboard-copy">
+                <strong>{entry.country}</strong>
+                <span>{entry.artist}</span>
+              </div>
+              <span className="leaderboard-score">{entry.score} pkt</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="votes-grid">
+        {stage.entries.map((entry) => (
+          <article
+            key={entry.id}
+            className="artist-card"
+            style={{
+              background: `linear-gradient(160deg, ${entry.accentFrom}22, ${entry.accentTo}10), var(--surface-container-high)`,
+            }}
+          >
+            <span
+              className="country-chip"
+              style={{
+                background: `linear-gradient(135deg, ${entry.accentFrom}, ${entry.accentTo})`,
+              }}
+            >
+              {entry.country}
+            </span>
+            <div className="artist-card-stage" />
+            <div className="artist-card-copy">
+              <p className="artist-song">{entry.song}</p>
+              <h3>{entry.artist}</h3>
+              <p className="support-copy">{entry.note}</p>
+            </div>
+            <label className="score-shell" htmlFor={entry.id}>
+              <span className="score-label">Punkty</span>
+              <input
+                id={entry.id}
+                className="score-input"
+                type="number"
+                min={0}
+                max={12}
+                value={voteState.scores[entry.id] ?? ""}
+                onChange={(event) => handleScoreChange(entry.id, event)}
+                placeholder="0-12"
+              />
+            </label>
+          </article>
+        ))}
+      </section>
+    </main>
+  );
 }

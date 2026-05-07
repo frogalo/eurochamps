@@ -6,95 +6,89 @@ const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
 const port = 3000;
 
-const app = next({ dev, hostname, port });
+const turbo = process.argv.includes("--turbopack");
+const app = next({ dev, hostname, port, turbo });
 const handler = app.getRequestHandler();
 
 app.prepare().then(() => {
-    const httpServer = createServer(handler);
+  const httpServer = createServer(handler);
 
-    const io = new Server(httpServer, {
-        path: "/socket.io",
-        transports: ["websocket"],
-        pingInterval: 10000, // Send a ping every 10 seconds.
-        pingTimeout: 5000,
+  const io = new Server(httpServer, {
+    path: "/socket.io",
+    transports: ["websocket"],
+    pingInterval: 10000,
+    pingTimeout: 5000,
+  });
+
+  const getStageUsers = (stage: string) => {
+    const socketsInRoom = io.sockets.adapter.rooms.get(stage) || new Set();
+
+    return Array.from(socketsInRoom)
+      .map((socketId) => io.sockets.sockets.get(socketId)?.data.username)
+      .filter(Boolean);
+  };
+
+  io.on("connection", (socket) => {
+    console.log("New connection:", socket.id);
+
+    socket.on("join", ({ stage, name }: { stage: string; name: string }) => {
+      const previousStage = socket.data.stage;
+      const previousUser = socket.data.username || name;
+
+      if (previousStage && previousStage !== stage) {
+        socket.leave(previousStage);
+        socket.to(previousStage).emit("userLeft", {
+          name: previousUser,
+          stage: previousStage,
+        });
+      }
+
+      socket.data.username = name;
+      socket.data.stage = stage;
+      socket.join(stage);
+
+      socket.emit("currentUsers", getStageUsers(stage));
+      socket.to(stage).emit("userJoined", { name, stage });
     });
 
-    io.on("connection", (socket) => {
-        console.log("New connection:", socket.id);
+    socket.on("leaveStage", ({ stage, name }: { stage: string; name?: string }) => {
+      if (socket.data.stage !== stage) {
+        return;
+      }
 
-        socket.on(
-            "join",
-            async ({ stage, name }: { stage: string; name: string }) => {
-                console.log(`User "${name}" joined stage: ${stage}`);
-
-                // Save the username and the stage on the socket's data.
-                socket.data.username = name;
-                socket.data.stage = stage;
-
-                socket.join(stage);
-
-                // Get list of sockets in the room.
-                const socketsInRoom =
-                    io.sockets.adapter.rooms.get(stage) || new Set();
-                const currentUsers = Array.from(socketsInRoom)
-                    .map(
-                        (socketId) =>
-                            io.sockets.sockets.get(socketId)?.data.username
-                    )
-                    .filter(Boolean);
-
-                // Send the current list to the joining socket.
-                socket.emit("currentUsers", currentUsers);
-
-                // Inform others in the room that a new user joined.
-                socket.to(stage).emit("userJoined", { name, stage });
-            }
-        );
-
-        // New event: Respond with the current list of connected users.
-        socket.on(
-            "getAllConnectedUsers",
-            ({ stage }: { stage: string }) => {
-                const socketsInRoom =
-                    io.sockets.adapter.rooms.get(stage) || new Set();
-                const currentUsers = Array.from(socketsInRoom)
-                    .map(
-                        (socketId) =>
-                            io.sockets.sockets.get(socketId)?.data.username
-                    )
-                    .filter(Boolean);
-                socket.emit("currentUsers", currentUsers);
-            }
-        );
-
-        socket.on("disconnect", () => {
-            console.log("User disconnected:", socket.id);
-            const stage = socket.data.stage || "Home";
-            socket.to(stage).emit("userLeft", {
-                name: socket.data.username || "User",
-                stage,
-            });
-        });
+      socket.leave(stage);
+      socket.to(stage).emit("userLeft", {
+        name: socket.data.username || name || "User",
+        stage,
+      });
+      socket.data.stage = undefined;
     });
 
-    // Log all connected sockets and their user info every 10 seconds.
-    setInterval(() => {
-        console.log("==== Connected sockets and users ====");
-        for (const [socketId, socket] of io.sockets.sockets) {
-            console.log(`Socket ${socketId}:`, {
-                username: socket.data.username,
-                stage: socket.data.stage,
-            });
-        }
-        console.log("=====================================");
-    }, 10000);
+    socket.on("getAllConnectedUsers", ({ stage }: { stage: string }) => {
+      socket.emit("currentUsers", getStageUsers(stage));
+    });
 
-    httpServer
-        .once("error", (err: unknown) => {
-            console.error(err);
-            process.exit(1);
-        })
-        .listen(port, () => {
-            console.log(`> Ready on http://${hostname}:${port}`);
-        });
+    socket.on("disconnect", () => {
+      console.log("User disconnected:", socket.id);
+      const stage = socket.data.stage;
+
+      if (!stage) {
+        return;
+      }
+
+      socket.to(stage).emit("userLeft", {
+        name: socket.data.username || "User",
+        stage,
+      });
+    });
+  });
+
+  httpServer
+    .once("error", (err: unknown) => {
+      console.error(err);
+      process.exit(1);
+    })
+    .listen(port, () => {
+      console.log(`> Ready on http://${hostname}:${port}`);
+    });
 });

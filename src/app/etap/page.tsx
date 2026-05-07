@@ -1,67 +1,138 @@
 "use client";
 
-import React from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
 import Button from "@/components/Button";
 import { useUser } from "@/context/UserContext";
+import { STAGES } from "@/lib/stages";
+import {
+  countScoredEntries,
+  readVoteState,
+  voteStorageKey,
+} from "@/lib/votes";
 
-interface StageItem {
-    name: string;
-    date: string;
-}
+type StageStatus = "ready" | "draft" | "submitted";
 
-const stages: StageItem[] = [
-    {
-        name: "Półfinał 1",
-        date: "13 maja",
-    },
-    {
-        name: "Półfinał 2",
-        date: "15 maja",
-    },
-    {
-        name: "Finał",
-        date: "17 maja",
-    },
-];
+const STATUS_LABELS: Record<StageStatus, string> = {
+  ready: "Gotowe",
+  draft: "Szkic",
+  submitted: "Wyslane",
+};
 
 export default function Stage() {
-    const router = useRouter();
-    const { logout } = useUser();
+  const router = useRouter();
+  const { currentUser, logout } = useUser();
+  const [mounted, setMounted] = useState(false);
+  const [statusMap, setStatusMap] = useState<Record<string, StageStatus>>({});
 
-    const handleStageClick = (stageName: string) => {
-        if (stageName) {
-            // Przekierowanie do dynamicznej strony /etap/[id]
-            router.push(`/etap/${encodeURIComponent(stageName)}`);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) {
+      return;
+    }
+
+    if (!currentUser) {
+      router.replace("/");
+      return;
+    }
+
+    const nextStatusMap = STAGES.reduce<Record<string, StageStatus>>(
+      (result, stage) => {
+        const stored = localStorage.getItem(voteStorageKey(currentUser, stage.id));
+        const voteState = readVoteState(stored, stage.entries);
+        const scoredEntries = countScoredEntries(stage.entries, voteState.scores);
+
+        if (voteState.submittedAt) {
+          result[stage.id] = "submitted";
+        } else if (scoredEntries > 0) {
+          result[stage.id] = "draft";
+        } else {
+          result[stage.id] = "ready";
         }
-    };
 
-    const handleChangeUser = () => {
-        logout();
-        router.push("/");
-    };
-
-    return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-8 space-y-6">
-            {stages.map((stage, index) => (
-                <Button
-                    text={stage.name}
-                    key={index}
-                    extra={stage.date}
-                    onClick={() => handleStageClick(stage.name)}
-                >
-                    <h2 className="text-2xl font-semibold">{stage.name}</h2>
-                    {stage.date && (
-                        <p className="text-lg text-gray-600">{stage.date}</p>
-                    )}
-                </Button>
-            ))}
-            <Button
-                text="Zmień osobę"
-                onClick={handleChangeUser}
-                background="var(--quaternary-accent)"
-            />
-
-        </div>
+        return result;
+      },
+      {}
     );
+
+    setStatusMap(nextStatusMap);
+  }, [currentUser, mounted, router]);
+
+  const handleChangeUser = () => {
+    logout();
+    router.push("/");
+  };
+
+  if (!mounted || !currentUser) {
+    return null;
+  }
+
+  return (
+    <main className="app-shell">
+      <section className="stage-header">
+        <div className="hero-copy">
+          <p className="eyebrow">Lobby areny</p>
+          <h1 className="display-title">Wybierz dzisiejszy etap.</h1>
+          <p className="hero-text">
+            Kazdy etap ma wlasny ranking na zywo, liste obecnych widzow i
+            zapisane noty dla <strong>{currentUser}</strong>.
+          </p>
+        </div>
+        <div className="lobby-actions">
+          <div className="status-ribbon compact">
+            <span className="status-ribbon-label">Aktywne konto</span>
+            <strong>{currentUser}</strong>
+          </div>
+          <Button
+            text="Zmien uzytkownika"
+            eyebrow="Drugorzedne"
+            variant="secondary"
+            onClick={handleChangeUser}
+          />
+        </div>
+      </section>
+
+      <section className="stage-grid">
+        {STAGES.map((stage, index) => {
+          const status = statusMap[stage.id] ?? "ready";
+          const stored = localStorage.getItem(voteStorageKey(currentUser, stage.id));
+          const voteState = readVoteState(stored, stage.entries);
+          const progress = countScoredEntries(stage.entries, voteState.scores);
+
+          return (
+            <button
+              key={stage.id}
+              type="button"
+              className="stage-card"
+              style={{
+                transform:
+                  index === 1
+                    ? "translateY(28px)"
+                    : index === 2
+                      ? "translateY(-18px)"
+                      : "translateY(0px)",
+              }}
+              onClick={() => router.push(`/etap/${stage.id}`)}
+            >
+              <span className={`status-pill status-pill-${status}`}>
+                {STATUS_LABELS[status]}
+              </span>
+              <p className="stage-card-date">{stage.date}</p>
+              <h2 className="stage-card-title">{stage.name}</h2>
+              <p className="stage-card-round">{stage.round}</p>
+              <p className="stage-card-copy">{stage.description}</p>
+              <div className="stage-card-footer">
+                <span className="metric-label">Ocenione wystepy</span>
+                <strong>{progress}/{stage.entries.length}</strong>
+              </div>
+            </button>
+          );
+        })}
+      </section>
+    </main>
+  );
 }

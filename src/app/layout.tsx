@@ -6,7 +6,8 @@ import { UserProvider } from "@/context/UserContext";
 const displayFont = Epilogue({
   subsets: ["latin"],
   variable: "--font-display",
-  weight: ["700", "800"],
+  weight: ["700", "800", "900"],
+  style: ["normal", "italic"],
 });
 
 const bodyFont = Be_Vietnam_Pro({

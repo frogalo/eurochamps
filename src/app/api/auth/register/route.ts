@@ -38,6 +38,8 @@ export async function POST(request: Request) {
           id: user.id,
           username: user.username,
           displayName: user.displayName ?? user.username,
+          role: user.role,
+          imagePath: user.imagePath,
         },
       },
       { status: 201 }

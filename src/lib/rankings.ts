@@ -7,11 +7,12 @@ export interface UserRankingInput {
 
 export async function saveUserRankings(
   userId: string,
+  stageId: string,
   rankings: UserRankingInput[]
 ) {
   return prisma.$transaction(async (tx) => {
     await tx.vote.deleteMany({
-      where: { userId },
+      where: { userId, stageId },
     });
 
     if (rankings.length === 0) {
@@ -21,22 +22,23 @@ export async function saveUserRankings(
     await tx.vote.createMany({
       data: rankings.map((ranking) => ({
         userId,
+        stageId,
         artistId: ranking.artistId,
         rank: ranking.rank,
       })),
     });
 
     return tx.vote.findMany({
-      where: { userId },
+      where: { userId, stageId },
       include: { artist: true },
       orderBy: { rank: "asc" },
     });
   });
 }
 
-export async function getUserRankings(userId: string) {
+export async function getUserRankings(userId: string, stageId?: string) {
   return prisma.vote.findMany({
-    where: { userId },
+    where: { userId, ...(stageId ? { stageId } : {}) },
     include: { artist: true },
     orderBy: { rank: "asc" },
   });

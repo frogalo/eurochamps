@@ -66,10 +66,10 @@ export const STAGES: StageDefinition[] = [
       },
       {
         id: "sf1-australia",
-        country: "Australia",
+        country: "AU",
         artist: "Solar Echo",
         song: "Chrome Hearts",
-        note: "Arena rock przepisany na precyzyjny dance-pop.",
+        note: "https://www.youtube.com/watch?v=kYI9458O2G8",
         accentFrom: "#ffd166",
         accentTo: "#df8eff",
       },
@@ -82,7 +82,7 @@ export const STAGES: StageDefinition[] = [
     date: "15 maja",
     tagline: "Czystsza realizacja, większe ryzyko i mniejszy margines błędu.",
     description:
-      "Ten etap opiera się na kontraście: jedna piosenka wywołuje łzy, a następna wchodzi w pełnym trybie stroboskopów.",
+      "Ten konkurs opiera się na kontraście: jedna piosenka wywołuje łzy, a następna wchodzi w pełnym trybie stroboskopów.",
     entries: [
       {
         id: "sf2-norway",
@@ -190,7 +190,7 @@ export const STAGES: StageDefinition[] = [
         country: "Szwajcaria",
         artist: "Sora",
         song: "Crystal Current",
-        note: "Krystalicznie czysty detal występu z precyzją skrojoną pod jury.",
+        note: "Krystalicznie czysty detal występu z precyzją skrojoną pod oceny.",
         accentFrom: "#df8eff",
         accentTo: "#00eefc",
       },

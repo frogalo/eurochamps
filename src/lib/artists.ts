@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function listArtists() {
   return prisma.artist.findMany({
-    orderBy: [{ country: "asc" }, { name: "asc" }],
+    orderBy: [{ year: "desc" }, { country: "asc" }, { name: "asc" }],
   });
 }
 
@@ -12,6 +12,7 @@ export async function createArtist(input: {
   description: string;
   imagePath: string;
   songPath: string;
+  year: string;
 }) {
   return prisma.artist.create({
     data: input,

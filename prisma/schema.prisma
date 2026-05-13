@@ -1,0 +1,126 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  displayName  String?
+  imagePath    String?  @default("")
+  role         Role     @default(USER)
+  votes        Vote[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum StageStatus {
+  OPEN
+  LOCKED
+}
+
+model Stage {
+  id          String   @id @default(cuid())
+  name        String
+  year        String
+  place       String
+  logoUrl     String   @default("")
+  round       String   @default("")
+  date        String   @default("")
+  tagline     String   @default("")
+  description String   @default("")
+  status      StageStatus @default(OPEN)
+  disabledArtists String[] @default([])
+  votes       Vote[]
+  stageScores StageScore[]
+  finalRankings FinalStageRanking[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Artist {
+  id          String   @id @default(cuid())
+  name        String
+  country     String
+  songPath    String
+  description String   @default("")
+  imagePath   String   @default("")
+  year        String
+  votes       Vote[]
+  stageScores StageScore[]
+  finalRankings FinalStageRanking[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum VoteType {
+  JURY
+  TELEVOTE
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  userId    String?
+  artistId  String
+  stageId   String
+  voterName String?
+  song        Int?
+  performance Int?
+  stageScore  Int?
+  overall     Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  artist    Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  stage     Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([artistId])
+  @@index([stageId])
+  @@index([userId])
+}
+
+model StageScore {
+  id        String   @id @default(cuid())
+  stageId   String
+  artistId  String
+  score     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stage     Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  artist    Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@index([stageId])
+  @@index([artistId])
+  @@unique([stageId, artistId])
+}
+
+
+
+model FinalStageRanking {
+  id        String   @id @default(cuid())
+  stageId   String
+  artistId  String
+  position  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stage     Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  artist    Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@index([stageId])
+  @@index([artistId])
+  @@unique([stageId, artistId])
+  @@unique([stageId, position])
+}

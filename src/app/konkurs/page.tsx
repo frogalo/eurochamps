@@ -5,11 +5,17 @@ import { useRouter } from "next/navigation";
 
 import Button from "@/components/Button";
 import { useUser } from "@/context/UserContext";
-import {
-  countScoredEntries,
-  readVoteState,
-  voteStorageKey,
-} from "@/lib/votes";
+interface StageView {
+  id: string;
+  name: string;
+  year: string;
+  place: string;
+  round: string;
+  description: string;
+  status: "OPEN" | "LOCKED";
+  entryCount: number;
+  userVoteCount: number;
+}
 
 type StageStatus = "ready" | "draft" | "submitted";
 
@@ -23,7 +29,7 @@ export default function Stage() {
   const router = useRouter();
   const { currentUser, isAdmin, logout } = useUser();
   const [mounted, setMounted] = useState(false);
-  const [stages, setStages] = useState<any[]>([]);
+  const [stages, setStages] = useState<StageView[]>([]);
   const [statusMap, setStatusMap] = useState<Record<string, StageStatus>>({});
   const [loading, setLoading] = useState(true);
 

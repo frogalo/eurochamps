@@ -8,7 +8,7 @@ import { useUser } from "@/context/UserContext";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { currentUser, currentUsername, imagePath, login, role, isAdmin } = useUser();
+  const { currentUser, currentUsername, imagePath, login, role } = useUser();
   const [mounted, setMounted] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +71,7 @@ export default function ProfilePage() {
 
       setNotice("Zdjęcie profilowe zostało zaktualizowane.");
       
-    } catch (err) {
+    } catch {
       setError("Wystąpił błąd podczas wgrywania zdjęcia.");
     } finally {
       setIsUploading(false);

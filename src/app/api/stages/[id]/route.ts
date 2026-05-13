@@ -16,12 +16,11 @@ export async function GET(
       return NextResponse.json({ error: "Nie znaleziono konkursu." }, { status: 404 });
     }
 
-    const dbStage = stage as any;
     const artists = await prisma.artist.findMany({
       where: { 
         year: stage.year,
-        ...(dbStage.disabledArtists && dbStage.disabledArtists.length > 0 ? {
-          id: { notIn: dbStage.disabledArtists }
+        ...(stage.disabledArtists && stage.disabledArtists.length > 0 ? {
+          id: { notIn: stage.disabledArtists }
         } : {})
       },
       orderBy: [

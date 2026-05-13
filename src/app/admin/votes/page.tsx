@@ -205,7 +205,6 @@ export default function AdminVotesPage() {
   if (!mounted || !currentUser || !isAdmin) return null;
 
   const selectedStage = stages.find((stage) => stage.id === selectedStageId);
-  const isLocked = selectedStage?.status === "LOCKED";
   const stageOptions = stages.map((stage) => ({
     value: stage.id,
     label: `${stage.name} · ${stage.year} · ${stage.place}`,

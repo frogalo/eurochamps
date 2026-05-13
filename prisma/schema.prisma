@@ -75,6 +75,8 @@ model Vote {
   artistId  String
   stageId   String
   voterName String?
+  voteType  VoteType @default(JURY)
+  rank      Int      @default(0)
   song        Int?
   performance Int?
   stageScore  Int?

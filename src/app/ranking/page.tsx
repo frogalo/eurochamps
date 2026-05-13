@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import Button from "@/components/Button";
@@ -40,7 +40,7 @@ interface ScoreboardArtist {
   points?: number;
 }
 
-export default function RankingPage() {
+function RankingContent() {
   const router = useRouter();
   const params = useSearchParams();
   const { currentUser } = useUser();
@@ -183,7 +183,7 @@ export default function RankingPage() {
         <p className="login-error">{error}</p>
       ) : artists.length === 0 ? (
         <p className="hero-text">
-          Wyniki dla konkursu "{selectedStage?.name}" będą dostępne po zakończeniu głosowania.
+          Wyniki dla konkursu &quot;{selectedStage?.name}&quot; będą dostępne po zakończeniu głosowania.
         </p>
       ) : (
         <>
@@ -626,5 +626,13 @@ export default function RankingPage() {
         }
       `}</style>
     </main>
+  );
+}
+
+export default function RankingPage() {
+  return (
+    <Suspense fallback={<div className="app-shell"><p className="hero-text">Ładowanie...</p></div>}>
+      <RankingContent />
+    </Suspense>
   );
 }

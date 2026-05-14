@@ -26,6 +26,9 @@ services:
       PORT: 3013
     depends_on:
       - db
+    volumes:
+      - uploads_data:/app/public/uploads
 
 volumes:
   postgres_data:
+  uploads_data:

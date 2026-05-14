@@ -24,12 +24,25 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(bytes);
 
     // Save to public/uploads
+    // Using absolute path for Docker volume persistence
     const uploadDir = join(process.cwd(), "public", "uploads");
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
+    
+    try {
+      if (!existsSync(uploadDir)) {
+        await mkdir(uploadDir, { recursive: true });
+      }
+    } catch (dirError) {
+      console.error("Failed to create upload directory:", dirError);
+      return NextResponse.json({ error: "Serwer nie moze zapisac pliku." }, { status: 500 });
     }
 
-    const ext = file.name.split('.').pop() || 'png';
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+    // Validate extension
+    const allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    if (!allowedExts.includes(ext)) {
+      return NextResponse.json({ error: "Niedozwolony format pliku." }, { status: 400 });
+    }
+
     const filename = `user_${username}_${Date.now()}.${ext}`;
     const filepath = join(uploadDir, filename);
 

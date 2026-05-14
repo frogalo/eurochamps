@@ -2058,6 +2058,10 @@ textarea {
     justify-content: center;
     flex-wrap: wrap;
   }
+
+  .hidden-mobile {
+    display: none !important;
+  }
 }
 
 @media (max-width: 460px) {

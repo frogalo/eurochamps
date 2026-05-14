@@ -323,6 +323,7 @@ export default function StageDetail() {
               text="Zapisz"
               onClick={reshuffleRanking}
               disabled={!isDirty}
+              className="hidden-mobile"
             />
           )}
           <Button

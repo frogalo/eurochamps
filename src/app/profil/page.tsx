@@ -30,20 +30,51 @@ export default function ProfilePage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate size (e.g. max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Zdjęcie jest za duże (max 5MB).");
-      return;
-    }
-
+    // Show initial loading state
     setIsUploading(true);
     setError(null);
     setNotice(null);
 
-    const formData = new FormData();
-    formData.append("image", file);
-
     try {
+      // Resize image on client side for mobile/remote efficiency
+      const compressedBlob = await new Promise<Blob>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+          const img = new Image();
+          img.src = e.target?.result as string;
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const MAX_SIZE = 800; // Profile pics don't need to be huge
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_SIZE) {
+                height *= MAX_SIZE / width;
+                width = MAX_SIZE;
+              }
+            } else {
+              if (height > MAX_SIZE) {
+                width *= MAX_SIZE / height;
+                height = MAX_SIZE;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx?.drawImage(img, 0, 0, width, height);
+            canvas.toBlob((blob) => blob ? resolve(blob) : reject("Błąd kompresji"), "image/jpeg", 0.85);
+          };
+          img.onerror = () => reject("Błąd wczytywania obrazu");
+        };
+        reader.onerror = () => reject("Błąd odczytu pliku");
+      });
+
+      const formData = new FormData();
+      formData.append("image", compressedBlob, "profile.jpg");
+
       const response = await fetch("/api/profile/image", {
         method: "POST",
         headers: {
@@ -71,8 +102,9 @@ export default function ProfilePage() {
 
       setNotice("Zdjęcie profilowe zostało zaktualizowane.");
       
-    } catch {
-      setError("Wystąpił błąd podczas wgrywania zdjęcia.");
+    } catch (err) {
+      console.error(err);
+      setError(typeof err === "string" ? err : "Wystąpił błąd podczas wgrywania zdjęcia.");
     } finally {
       setIsUploading(false);
     }

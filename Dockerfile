@@ -22,6 +22,7 @@ COPY . .
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
+
 RUN npx prisma generate
 RUN npm run build
 
@@ -49,9 +50,6 @@ RUN chown nextjs:nodejs .next
 
 # Note: Since this project uses a custom server.ts, we copy everything and run it via tsx.
 COPY --from=builder --chown=nextjs:nodejs /app ./
-
-# Ensure uploads directory exists and has correct permissions
-RUN mkdir -p public/uploads && chown -R nextjs:nodejs public/uploads
 
 USER nextjs
 

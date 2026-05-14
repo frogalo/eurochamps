@@ -24,6 +24,7 @@ services:
       DATABASE_URL: "postgresql://euroadmin:europassword@db:5432/eurochamps?schema=public"
       NODE_ENV: production
       PORT: 3013
+      UPLOAD_DIR: ./public/uploads
     depends_on:
       - db
     volumes:

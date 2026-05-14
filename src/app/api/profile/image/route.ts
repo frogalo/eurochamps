@@ -23,9 +23,8 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Save to public/uploads
-    // Using absolute path for Docker volume persistence
-    const uploadDir = join(process.cwd(), "public", "uploads");
+    // Save to upload directory (support environment override for Docker/Remote)
+    const uploadDir = process.env.UPLOAD_DIR || join(process.cwd(), "public", "uploads");
     
     try {
       if (!existsSync(uploadDir)) {
@@ -48,7 +47,8 @@ export async function POST(request: Request) {
 
     await writeFile(filepath, buffer);
 
-    const imagePath = `/uploads/${filename}`;
+    // Use the API route for serving, same as f1-vote
+    const imagePath = `/api/uploads/${filename}`;
 
     // Update user in DB
     const updatedUser = await prisma.user.update({

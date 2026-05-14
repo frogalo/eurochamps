@@ -42,6 +42,11 @@ export default function RegisterPage() {
       return;
     }
 
+    if (password.length < 6) {
+      setError("Hasło jest za słabe (wymagane min. 6 znaków).");
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 

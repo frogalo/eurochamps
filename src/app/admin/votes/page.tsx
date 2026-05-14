@@ -38,7 +38,6 @@ export default function AdminVotesPage() {
 
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [isSavingVotes, setIsSavingVotes] = useState(false);
   const [isSavingFinal, setIsSavingFinal] = useState(false);
 
   useEffect(() => {
@@ -112,48 +111,7 @@ export default function AdminVotesPage() {
 
 
 
-  async function handleSubmitVotes(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!selectedStageId) {
-      setError("Wybierz konkurs.");
-      return;
-    }
 
-    setIsSavingVotes(true);
-    setError(null);
-    setNotice(null);
-
-    try {
-      const votes = Object.entries(scores)
-        .filter(([, value]) => value !== "")
-        .map(([artistId, value]) => ({
-          artistId,
-          rank: Number(value),
-        }));
-
-      const response = await fetch("/api/admin/votes", {
-        method: "POST",
-        headers: getAdminHeaders(currentUsername ?? currentUser, true),
-        body: JSON.stringify({
-          stageId: selectedStageId,
-          voterName: "ADMIN",
-          voteType: "JURY",
-          votes,
-        }),
-      });
-
-      const data = (await response.json()) as { error?: string };
-      if (!response.ok) {
-        setError(data.error ?? "Nie udalo sie zapisac glosow.");
-        return;
-      }
-      setNotice(`Zapisano ${votes.length} glosow.`);
-    } catch {
-      setError("Nie udalo sie zapisac glosow.");
-    } finally {
-      setIsSavingVotes(false);
-    }
-  }
 
   async function handleSaveFinalRanking() {
     if (!selectedStageId) {
@@ -239,15 +197,10 @@ export default function AdminVotesPage() {
       </section>
 
       {selectedStageId && (
-        <form onSubmit={handleSubmitVotes}>
+        <div>
           <section className="admin-layout">
             <article className="section-panel admin-panel">
               <div className="admin-inline-actions">
-                <Button
-                  text={isSavingVotes ? "Zapisywanie glosow..." : "Zapisz glosy admina"}
-                  type="submit"
-                  disabled={isSavingVotes}
-                />
                 <Button
                   text={isSavingFinal ? "Zapisywanie finalu..." : "Zapisz ranking finalny"}
                   onClick={handleSaveFinalRanking}
@@ -298,7 +251,7 @@ export default function AdminVotesPage() {
               </article>
             ))}
           </section>
-        </form>
+        </div>
       )}
     </main>
   );

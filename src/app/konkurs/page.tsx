@@ -15,6 +15,7 @@ interface StageView {
   status: "OPEN" | "LOCKED";
   entryCount: number;
   userVoteCount: number;
+  logoUrl?: string;
 }
 
 type StageStatus = "ready" | "draft" | "submitted";
@@ -206,7 +207,7 @@ export default function Stage() {
                 <button
                   key={stage.id}
                   type="button"
-                  className="stage-card"
+                  className="stage-card stage-card-lobby"
                   style={{
                     transform:
                       index === 1
@@ -221,22 +222,44 @@ export default function Stage() {
                       : router.push(`/konkurs/${stage.id}`)
                   }
                 >
-                  <span className={`status-pill status-pill-${status}`}>
-                    {STATUS_LABELS[status]}
-                  </span>
-                  <p className="stage-card-date">{stage.year} · {stage.place}</p>
-                  <h2 className="stage-card-title">{stage.name}</h2>
-                  <p className="stage-card-round">{stage.round}</p>
-                  <p className="stage-card-copy">{stage.description}</p>
-                  <div className="stage-card-footer">
-                    <span className="metric-label">Status</span>
-                    <span className={`status-pill status-pill-${(stage.status ?? "OPEN") === "OPEN" ? "ready" : "submitted"}`}>
-                      {(stage.status ?? "OPEN") === "OPEN" ? "Otwarty" : "Zablokowany"}
+                  <div className="stage-card-top">
+                    {stage.logoUrl ? (
+                      <img src={stage.logoUrl} alt="" className="stage-card-logo-large" />
+                    ) : (
+                      <div className="stage-card-logo-fallback">{stage.year}</div>
+                    )}
+                    <span className={`status-pill status-pill-${status}`}>
+                      {STATUS_LABELS[status]}
                     </span>
                   </div>
-                  <div className="stage-card-footer">
-                    <span className="metric-label">Ocenione wystepy</span>
-                    <strong>{progress}/{stage.entryCount}</strong>
+
+                  <div className="stage-card-main">
+                    <div className="stage-meta-row">
+                      <span className="stage-tag">{stage.year}</span>
+                      <span className="stage-tag">{stage.place}</span>
+                    </div>
+                    <h2 className="stage-card-title">{stage.name}</h2>
+                    <p className="stage-card-round">{stage.round}</p>
+                  </div>
+
+                  <div className="stage-card-progress-section">
+                    <div className="progress-info">
+                      <span className="progress-label">Twój postęp</span>
+                      <span className="progress-value">{progress}/{stage.entryCount}</span>
+                    </div>
+                    <div className="progress-bar-track">
+                      <div 
+                        className="progress-bar-fill" 
+                        style={{ width: `${(progress / (stage.entryCount || 1)) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div className="stage-card-footer-lobby">
+                    <div className="status-indicator">
+                      <div className={`status-dot ${(stage.status ?? "OPEN") === "OPEN" ? "status-dot-open" : "status-dot-locked"}`}></div>
+                      <span>{(stage.status ?? "OPEN") === "OPEN" ? "Głosowanie otwarte" : "Głosowanie zakończone"}</span>
+                    </div>
                   </div>
                 </button>
               );

@@ -139,8 +139,8 @@ export default function SortableVoteCard({
               </button>
             </div>
           ))}
-          <div className="vote-field vote-cell vote-field-overall">
-            <input type="text" value={overall} disabled readOnly aria-label="Overall" />
+          <div className="vote-field vote-cell vote-field-overall" onClick={openMobileModal} role="button" tabIndex={0}>
+            <div className="overall-value">{overall}</div>
           </div>
         </div>
       </article>

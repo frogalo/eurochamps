@@ -80,6 +80,8 @@ export default function StageDetail() {
   const [orderedEntries, setOrderedEntries] = useState<StageEntryView[]>([]);
   const [isDirty, setIsDirty] = useState(false);
   const [criteriaScores, setCriteriaScores] = useState<Record<string, CriteriaScore>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const [voteState, setVoteState] = useState<VoteState>({
     scores: {},
     updatedAt: null,
@@ -232,8 +234,10 @@ export default function StageDetail() {
       };
     });
 
+    setIsSaving(true);
+    setNotice(null);
     try {
-      await fetch('/api/votes', {
+      const response = await fetch('/api/votes', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -244,8 +248,16 @@ export default function StageDetail() {
           votes: votesPayload,
         }),
       });
+
+      if (response.ok) {
+        setNotice("Głosy zostały zapisane.");
+        // Clear notice after 3 seconds
+        setTimeout(() => setNotice(null), 3000);
+      }
     } catch (e) {
       console.error("Failed to save votes", e);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -319,12 +331,15 @@ export default function StageDetail() {
         </div>
         <div className="header-actions">
           {!isVotingLocked && (
-            <Button
-              text="Zapisz"
-              onClick={reshuffleRanking}
-              disabled={!isDirty}
-              className="hidden-mobile"
-            />
+            <div className="flex items-center gap-4">
+              {notice && <span className="save-notice">{notice}</span>}
+              <Button
+                text={isSaving ? "Zapisywanie..." : "Zapisz"}
+                onClick={reshuffleRanking}
+                disabled={!isDirty || isSaving}
+                className="hidden-mobile"
+              />
+            </div>
           )}
           <Button
             text="Wróć"

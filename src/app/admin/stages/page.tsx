@@ -160,6 +160,38 @@ export default function AdminStagesPage() {
     }
   }
 
+  async function toggleStatus(stage: StageRecord) {
+    const newStatus = (stage.status ?? "OPEN") === "OPEN" ? "LOCKED" : "OPEN";
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await fetch(`/api/admin/stages/${stage.id}`, {
+        method: "PUT",
+        headers: getAdminHeaders(currentUsername ?? currentUser, true),
+        body: JSON.stringify({
+          name: stage.name,
+          year: stage.year,
+          place: stage.place,
+          logoUrl: stage.logoUrl,
+          round: stage.round,
+          date: stage.date,
+          tagline: stage.tagline,
+          description: stage.description,
+          status: newStatus,
+          disabledArtists: stage.disabledArtists || [],
+        }),
+      });
+      if (!response.ok) {
+        setError("Nie udało się zmienić statusu.");
+        return;
+      }
+      setNotice(`Konkurs ${stage.name} jest teraz ${newStatus === "OPEN" ? "otwarty" : "zablokowany"}.`);
+      await loadStages();
+    } catch {
+      setError("Nie udało się zmienić statusu.");
+    }
+  }
+
   if (!mounted || !currentUser || !isAdmin) return null;
 
   return (
@@ -349,6 +381,10 @@ export default function AdminStagesPage() {
               <strong>{stage._count.votes}</strong>
             </div>
             <div className="admin-inline-actions">
+              <Button
+                text={(stage.status ?? "OPEN") === "OPEN" ? "Zablokuj" : "Otwórz"}
+                onClick={() => void toggleStatus(stage)}
+              />
               <Button
                 text="Edytuj"
                 variant="secondary"

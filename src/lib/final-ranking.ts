@@ -18,6 +18,10 @@ export interface UserVoteDetail {
   artistId: string;
   predictedPosition: number;
   pointsEarned: number;
+  song?: number;
+  performance?: number;
+  stageScore?: number;
+  overall?: number;
 }
 
 export interface DetailedLeaderboardRow extends UserStageLeaderboardRow {
@@ -103,7 +107,7 @@ export async function getFinalStageRanking(stageId: string) {
 
 export async function getDetailedScoreboard(stageId: string): Promise<DetailedScoreboard> {
   const db = prisma as any;
-  const [finalRanking, votes, stageScores] = await Promise.all([
+  const [finalRanking, votes, stageScores, stage] = await Promise.all([
     db.finalStageRanking.findMany({
       where: { stageId },
       include: {
@@ -138,10 +142,48 @@ export async function getDetailedScoreboard(stageId: string): Promise<DetailedSc
     prisma.stageScore.findMany({
       where: { stageId },
     }),
+    prisma.stage.findUnique({ where: { id: stageId } }),
   ]);
 
-  if (finalRanking.length === 0) {
+  if (!stage) {
     return { artists: [], users: [] };
+  }
+
+  // If no official final ranking yet, we use the artists assigned to the stage
+  let artistsData: any[] = [];
+  if (finalRanking.length > 0) {
+    artistsData = finalRanking.map((fr: any) => ({
+      id: fr.artistId,
+      name: fr.artist.name,
+      country: fr.artist.country,
+      finalPosition: fr.position,
+      imagePath: fr.artist.imagePath,
+      song: fr.artist.songPath,
+      points: stageScores.find(s => s.artistId === fr.artistId)?.score ?? 0,
+    }));
+  } else {
+    // Get artists from the year, respecting disabledArtists
+    const allArtists = await prisma.artist.findMany({
+      where: {
+        year: stage.year,
+        ...(stage.disabledArtists && stage.disabledArtists.length > 0 ? {
+          id: { notIn: stage.disabledArtists }
+        } : {})
+      },
+      orderBy: { country: "asc" }
+    });
+
+    artistsData = allArtists.map((a) => ({
+      id: a.id,
+      name: a.name,
+      country: a.country,
+      finalPosition: 0, // Indicator that results are not yet final
+      imagePath: a.imagePath,
+      song: a.songPath,
+      points: stageScores.find(s => s.artistId === a.id)?.score ?? 0,
+    }));
+    // Sort by points (current community leaderboard) if no final ranking
+    artistsData.sort((a, b) => b.points - a.points || a.country.localeCompare(b.country));
   }
 
   const finalPositionByArtistId = new Map<string, number>(
@@ -178,15 +220,22 @@ export async function getDetailedScoreboard(stageId: string): Promise<DetailedSc
     const voteDetails: UserVoteDetail[] = [];
     let totalPoints = 0;
 
-    for (const [artistId, finalPos] of finalPositionByArtistId.entries()) {
-      const predPos = predictedPositionByArtistId.get(artistId);
-      if (predPos === undefined) continue;
-      const pts = pointsFromPlacementDiff(Math.abs(predPos - finalPos));
+    // Use predictedPositionByArtistId to show all user votes
+    for (const [artistId, predPos] of predictedPositionByArtistId.entries()) {
+      const finalPos = finalPositionByArtistId.get(artistId);
+      let pts = 0;
+      if (finalPos !== undefined) {
+        pts = pointsFromPlacementDiff(Math.abs(predPos - finalPos));
+      }
       totalPoints += pts;
       voteDetails.push({
         artistId,
         predictedPosition: predPos,
         pointsEarned: pts,
+        song: sortedPredictions.find(p => p.artistId === artistId)?.song ?? 0,
+        performance: sortedPredictions.find(p => p.artistId === artistId)?.performance ?? 0,
+        stageScore: sortedPredictions.find(p => p.artistId === artistId)?.stageScore ?? 0,
+        overall: sortedPredictions.find(p => p.artistId === artistId)?.overall ?? 0,
       });
     }
 
@@ -203,17 +252,7 @@ export async function getDetailedScoreboard(stageId: string): Promise<DetailedSc
 
   users.sort((a, b) => b.points - a.points || a.displayName.localeCompare(b.displayName));
 
-  const artists = (finalRanking as any[]).map((item) => ({
-    id: item.artistId,
-    name: item.artist.name,
-    country: item.artist.country,
-    finalPosition: item.position,
-    imagePath: item.artist.imagePath,
-    song: item.artist.songPath,
-    points: scoresByArtistId.get(item.artistId) ?? 0,
-  }));
-
-  return { artists, users };
+  return { artists: artistsData, users };
 }
 
 export async function getStageLeaderboard(stageId: string): Promise<UserStageLeaderboardRow[]> {

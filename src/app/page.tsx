@@ -142,7 +142,6 @@ export default function LoginPage() {
 
           <Button
             text={isSubmitting ? "Logowanie..." : "Zaloguj się"}
-            eyebrow="Główny"
             type="submit"
             disabled={isSubmitting}
             className="login-submit"

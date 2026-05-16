@@ -54,8 +54,9 @@ function RankingContent() {
   const [selectedStageId, setSelectedStageId] = useState("");
   const [artists, setArtists] = useState<ScoreboardArtist[]>([]);
   const [users, setUsers] = useState<DetailedLeaderboardRow[]>([]);
-  const [selectedArtist, setSelectedArtist] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'personal' | 'community'>('personal');
+  const [selectedArtist, setSelectedArtist] = useState<ScoreboardArtist | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -137,6 +138,68 @@ function RankingContent() {
     [stages, selectedStageId]
   );
 
+  const communityStats = useMemo(() => {
+    if (!artists.length || !users.length) return null;
+
+    const statsMap = new Map<string, {
+      song: number;
+      performance: number;
+      stage: number;
+      overall: number;
+      count: number;
+    }>();
+
+    artists.forEach(a => statsMap.set(a.id, { song: 0, performance: 0, stage: 0, overall: 0, count: 0 }));
+
+    users.forEach(user => {
+      user.votes.forEach(vote => {
+        const s = statsMap.get(vote.artistId);
+        if (s) {
+          s.song += vote.song || 0;
+          s.performance += vote.performance || 0;
+          s.stage += vote.stageScore || 0;
+          s.overall += vote.overall || 0;
+          s.count++;
+        }
+      });
+    });
+
+    const artistAverages = new Map<string, any>();
+    artists.forEach(artist => {
+      const totals = statsMap.get(artist.id)!;
+      artistAverages.set(artist.id, {
+        artist,
+        avgSong: totals.count > 0 ? totals.song / totals.count : 0,
+        avgPerformance: totals.count > 0 ? totals.performance / totals.count : 0,
+        avgStage: totals.count > 0 ? totals.stage / totals.count : 0,
+        avgOverall: totals.count > 0 ? totals.overall / totals.count : 0,
+        totalOverall: totals.overall,
+        totalSong: totals.song,
+        totalPerformance: totals.performance,
+        totalStage: totals.stage,
+        voterCount: totals.count
+      });
+    });
+
+    const songStats = Array.from(artistAverages.values()).sort((a, b) => b.avgSong - a.avgSong);
+    const performanceStats = Array.from(artistAverages.values()).sort((a, b) => b.avgPerformance - a.avgPerformance);
+    const stageStats = Array.from(artistAverages.values()).sort((a, b) => b.avgStage - a.avgStage);
+    const overallStats = Array.from(artistAverages.values()).sort((a, b) => b.avgOverall - a.avgOverall);
+    const worstStats = Array.from(artistAverages.values()).sort((a, b) => a.avgOverall - b.avgOverall);
+
+    const communityRanked = [...overallStats];
+
+    return {
+      bestSong: songStats[0],
+      bestPerformance: performanceStats[0],
+      bestStage: stageStats[0],
+      bestOverall: overallStats[0],
+      worstSong: worstStats[0],
+      getCommunityRank: (artistId: string) => communityRanked.findIndex(a => a.artist.id === artistId) + 1,
+      artistAverages
+    };
+  }, [artists, users]);
+
   const sortedArtists = useMemo(() => {
     const currentUserRow = users.find(u => u.username === currentUser);
     const isFinal = artists.some(a => a.finalPosition > 0);
@@ -175,8 +238,6 @@ function RankingContent() {
           <Button text="Wróć do konkursów" variant="secondary" onClick={() => router.push("/konkurs")} />
         </div>
       </section>
-
-
 
       {loading ? (
         <p className="hero-text">Ładowanie rankingu...</p>
@@ -226,12 +287,10 @@ function RankingContent() {
 
                 return (
                   <div key={artist.id} className="artist-result-card">
-                    {/* Position outside */}
                     <div className="ranking-number outside">
                       {isFinal ? artist.finalPosition : "-"}
                     </div>
 
-                    {/* Flag outside */}
                     {artist.country.length === 2 && (
                       <img 
                         className="flag-hero outside" 
@@ -240,7 +299,7 @@ function RankingContent() {
                       />
                     )}
 
-                    <div className="result-card-inner" onClick={() => { setSelectedArtist(artist); setIsModalOpen(true); }} style={{ cursor: "pointer" }}>
+                    <div className="result-card-inner" onClick={() => { setSelectedArtist(artist); setModalMode('personal'); setIsModalOpen(true); }} style={{ cursor: "pointer" }}>
                       <div className="result-card-main-info">
                         <div className="artist-card-copy">
                           <h3>{countryName(artist.country)}</h3>
@@ -251,9 +310,9 @@ function RankingContent() {
                          <div className="user-score-breakdown">
                           {isFinal ? (
                              <div className="score-item total">
-                              <span>Głosy</span>
-                              <strong>{artist.points ?? 0}</strong>
-                            </div>
+                               <span>Głosy</span>
+                               <strong>{artist.points ?? 0}</strong>
+                             </div>
                           ) : (
                             <>
                               <div className="score-item">
@@ -297,23 +356,20 @@ function RankingContent() {
                             const isCorrect = isFinal && vote?.predictedPosition === artist.finalPosition;
                             
                             return (
-                              <div 
-                                key={user.userId} 
-                                className={`user-vote-chip mini ${isCorrect ? "correct" : ""}`}
-                                title={user.displayName}
-                              >
-                                <div className="chip-avatar" style={{ overflow: "hidden" }}>
+                              <div key={user.userId} className="other-voter-item">
+                                <div className={`voter-circle ${isCorrect ? "correct" : ""}`} title={user.displayName}>
                                   {user.imagePath ? (
-                                    <img src={user.imagePath} alt={user.displayName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                    <img src={user.imagePath} alt={user.displayName} />
                                   ) : (
                                     getInitials(user.displayName)
                                   )}
+                                  <div className="voter-mini-rank">#{vote?.predictedPosition || "-"}</div>
                                 </div>
-                                <span className="chip-pos">#{vote?.predictedPosition || "-"}</span>
+                                <div className="voter-label-name">
+                                  {user.displayName.slice(0, 5)}{user.displayName.length > 5 ? '...' : ''}
+                                </div>
                                 {vote && vote.pointsEarned > 0 && (
-                                  <span className="chip-pts" style={{ fontSize: "0.65rem", color: "var(--secondary)", fontWeight: "bold" }}>
-                                    +{vote.pointsEarned}
-                                  </span>
+                                  <div className="voter-gain-badge">+{vote.pointsEarned}</div>
                                 )}
                               </div>
                             );
@@ -324,6 +380,62 @@ function RankingContent() {
                   </div>
                 );
               })}
+            </div>
+          </section>
+
+          <div className="section-divider"></div>
+
+          <section className="community-highlights" style={{ marginBottom: "4rem" }}>
+            <h2 className="section-title" style={{ marginLeft: "0", marginBottom: "2rem" }}>Wasze Najlepsze</h2>
+            
+            {communityStats && (
+              <div className="hero-winner-wrap" style={{ marginBottom: "3rem" }}>
+                <HighlightCard 
+                  title="Wasz Faworyt" 
+                  data={communityStats.bestOverall} 
+                  score={communityStats.bestOverall.avgOverall}
+                  rank={communityStats.getCommunityRank(communityStats.bestOverall.artist.id)}
+                  isGold
+                  isHero
+                  onClick={() => { setSelectedArtist(communityStats.bestOverall.artist); setModalMode('community'); setIsModalOpen(true); }}
+                />
+              </div>
+            )}
+
+            <div className="highlights-grid">
+              {communityStats && (
+                <>
+                  <HighlightCard 
+                    title="Najlepsza Piosenka" 
+                    data={communityStats.bestSong} 
+                    score={communityStats.bestSong.avgSong}
+                    rank={communityStats.getCommunityRank(communityStats.bestSong.artist.id)}
+                    onClick={() => { setSelectedArtist(communityStats.bestSong.artist); setModalMode('community'); setIsModalOpen(true); }}
+                  />
+                  <HighlightCard 
+                    title="Najlepszy Występ" 
+                    data={communityStats.bestPerformance} 
+                    score={communityStats.bestPerformance.avgPerformance}
+                    rank={communityStats.getCommunityRank(communityStats.bestPerformance.artist.id)}
+                    onClick={() => { setSelectedArtist(communityStats.bestPerformance.artist); setModalMode('community'); setIsModalOpen(true); }}
+                  />
+                  <HighlightCard 
+                    title="Najlepsza Scena" 
+                    data={communityStats.bestStage} 
+                    score={communityStats.bestStage.avgStage}
+                    rank={communityStats.getCommunityRank(communityStats.bestStage.artist.id)}
+                    onClick={() => { setSelectedArtist(communityStats.bestStage.artist); setModalMode('community'); setIsModalOpen(true); }}
+                  />
+                  <HighlightCard 
+                    title="Najsłabsza Piosenka" 
+                    data={communityStats.worstSong} 
+                    score={communityStats.worstSong.avgOverall}
+                    rank={communityStats.getCommunityRank(communityStats.worstSong.artist.id)}
+                    isWorst
+                    onClick={() => { setSelectedArtist(communityStats.worstSong.artist); setModalMode('community'); setIsModalOpen(true); }}
+                  />
+                </>
+              )}
             </div>
           </section>
         </>
@@ -357,38 +469,60 @@ function RankingContent() {
             </div>
             <div className="score-modal-fields-wrap">
               <div className="score-modal-overall">
-                <span>Twoja Suma</span>
-                <strong>{users.find(u => u.username === currentUser)?.votes.find(v => v.artistId === selectedArtist.id)?.overall ?? 0}</strong>
+                <span>{modalMode === 'personal' ? 'Twoja Suma' : 'Wasza Suma'}</span>
+                <strong>
+                  {modalMode === 'personal' 
+                    ? (users.find(u => u.username === currentUser)?.votes.find(v => v.artistId === selectedArtist.id)?.overall ?? 0)
+                    : (communityStats?.artistAverages.get(selectedArtist.id)?.totalOverall ?? 0)
+                  }
+                </strong>
               </div>
               
               <div className="score-modal-fields" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginTop: '1rem' }}>
                 <div className="score-modal-stat-box" style={{ textAlign: 'center', background: 'rgba(255,255,255,0.03)', padding: '0.8rem', borderRadius: '0.75rem' }}>
                   <span style={{ fontSize: '0.7rem', opacity: 0.7, textTransform: 'uppercase' }}>Piosenka</span>
-                  <strong style={{ display: 'block', fontSize: '1.2rem' }}>{users.find(u => u.username === currentUser)?.votes.find(v => v.artistId === selectedArtist.id)?.song ?? 0}</strong>
+                  <strong style={{ display: 'block', fontSize: '1.2rem' }}>
+                    {modalMode === 'personal'
+                      ? (users.find(u => u.username === currentUser)?.votes.find(v => v.artistId === selectedArtist.id)?.song ?? 0)
+                      : (communityStats?.artistAverages.get(selectedArtist.id)?.totalSong ?? 0)
+                    }
+                  </strong>
                 </div>
                 <div className="score-modal-stat-box" style={{ textAlign: 'center', background: 'rgba(255,255,255,0.03)', padding: '0.8rem', borderRadius: '0.75rem' }}>
                   <span style={{ fontSize: '0.7rem', opacity: 0.7, textTransform: 'uppercase' }}>Występ</span>
-                  <strong style={{ display: 'block', fontSize: '1.2rem' }}>{users.find(u => u.username === currentUser)?.votes.find(v => v.artistId === selectedArtist.id)?.performance ?? 0}</strong>
+                  <strong style={{ display: 'block', fontSize: '1.2rem' }}>
+                    {modalMode === 'personal'
+                      ? (users.find(u => u.username === currentUser)?.votes.find(v => v.artistId === selectedArtist.id)?.performance ?? 0)
+                      : (communityStats?.artistAverages.get(selectedArtist.id)?.totalPerformance ?? 0)
+                    }
+                  </strong>
                 </div>
                 <div className="score-modal-stat-box" style={{ textAlign: 'center', background: 'rgba(255,255,255,0.03)', padding: '0.8rem', borderRadius: '0.75rem' }}>
                   <span style={{ fontSize: '0.7rem', opacity: 0.7, textTransform: 'uppercase' }}>Scena</span>
-                  <strong style={{ display: 'block', fontSize: '1.2rem' }}>{users.find(u => u.username === currentUser)?.votes.find(v => v.artistId === selectedArtist.id)?.stageScore ?? 0}</strong>
+                  <strong style={{ display: 'block', fontSize: '1.2rem' }}>
+                    {modalMode === 'personal'
+                      ? (users.find(u => u.username === currentUser)?.votes.find(v => v.artistId === selectedArtist.id)?.stageScore ?? 0)
+                      : (communityStats?.artistAverages.get(selectedArtist.id)?.totalStage ?? 0)
+                    }
+                  </strong>
                 </div>
               </div>
 
               <div className="score-modal-footer-info" style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '1rem', textAlign: 'center' }}>
-                <p style={{ margin: 0, opacity: 0.7, fontSize: '0.8rem', textTransform: 'uppercase' }}>Twoja prognoza na ten kraj</p>
+                <p style={{ margin: 0, opacity: 0.7, fontSize: '0.8rem', textTransform: 'uppercase' }}>
+                  {modalMode === 'personal' ? 'Twoja prognoza na ten kraj' : 'Miejsce w waszym rankingu'}
+                </p>
                 <strong style={{ fontSize: '1.5rem', color: 'var(--secondary)' }}>
-                  #{users.find(u => u.username === currentUser)?.votes.find(v => v.artistId === selectedArtist.id)?.predictedPosition || '-'}
+                  {modalMode === 'personal'
+                    ? `#${users.find(u => u.username === currentUser)?.votes.find(v => v.artistId === selectedArtist.id)?.predictedPosition || '-'}`
+                    : `#${communityStats?.getCommunityRank(selectedArtist.id)}`
+                  }
                 </strong>
               </div>
             </div>
           </div>
         </div>
       )}
-
-
-
 
       <style jsx>{`
         .static-ranking-grid {
@@ -586,51 +720,80 @@ function RankingContent() {
         .user-votes-wrap {
           display: flex;
           flex-wrap: wrap;
-          gap: 0.5rem;
+          gap: 1.2rem;
         }
 
-        .user-vote-chip.mini {
-          padding: 0.25rem 0.6rem 0.25rem 0.25rem;
-          gap: 0.4rem;
-          background: rgba(0, 0, 0, 0.2);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-          border-radius: 999px;
+        .other-voter-item {
           display: flex;
+          flex-direction: column;
           align-items: center;
+          gap: 0.5rem;
+          min-width: 44px;
         }
 
-        .user-vote-chip.mini.correct {
-          border-color: var(--secondary);
-          background: rgba(45, 226, 230, 0.08);
-        }
-
-        .chip-avatar {
-          width: 20px;
-          height: 20px;
+        .voter-circle {
+          width: 44px;
+          height: 44px;
           border-radius: 50%;
           background: var(--surface-container-highest);
+          border: 2px solid rgba(255, 255, 255, 0.1);
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 0.55rem;
-          font-weight: 800;
-          overflow: hidden;
           position: relative;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          font-weight: 800;
+          font-size: 0.9rem;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
           flex-shrink: 0;
         }
 
-        .chip-avatar img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
-          border-radius: 50%;
+        .voter-circle.correct {
+          border-color: var(--secondary);
+          box-shadow: 0 0 15px rgba(45, 226, 230, 0.3);
         }
 
-        .chip-pos {
-          font-size: 0.8rem;
+        .voter-circle img {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .voter-mini-rank {
+          position: absolute;
+          bottom: -4px;
+          right: -4px;
+          background: var(--surface-container-high);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 6px;
+          padding: 1px 4px;
+          font-size: 0.65rem;
+          font-weight: 800;
+          color: white;
+          z-index: 5;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .voter-label-name {
+          font-size: 0.65rem;
+          opacity: 0.7;
+          color: white;
+          text-align: center;
+          white-space: nowrap;
           font-weight: 600;
+        }
+
+        .voter-gain-badge {
+          margin-top: -2px;
+          font-family: var(--font-label), sans-serif;
+          font-size: 0.6rem;
+          font-weight: 800;
+          color: var(--secondary);
+          background: rgba(45, 226, 230, 0.1);
+          padding: 1px 4px;
+          border-radius: 4px;
+          border: 1px solid rgba(45, 226, 230, 0.2);
         }
 
         .current-viewer-row {
@@ -799,12 +962,294 @@ function RankingContent() {
 
         @media (max-width: 640px) {
           .app-shell {
-            padding-left: 0;
-            padding-right: 0.2rem;
+            padding-bottom: 4rem;
+          }
+        }
+
+        .section-divider {
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+          margin: 5rem 0;
+          width: 100%;
+        }
+
+        .highlights-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 3rem;
+          padding-top: 2rem;
+        }
+
+        @media (max-width: 600px) {
+          .highlights-grid {
+            gap: 2.5rem;
+            grid-template-columns: 1fr;
+          }
+          .highlight-card {
+            aspect-ratio: auto;
+            min-height: 20rem;
           }
         }
       `}</style>
     </main>
+  );
+}
+
+function HighlightCard({ title, data, score, rank, isGold, isWorst, isHero, onClick }: { 
+  title: string, 
+  data: any, 
+  score: number, 
+  rank: number,
+  isGold?: boolean, 
+  isWorst?: boolean,
+  isHero?: boolean,
+  onClick?: () => void
+}) {
+  const { artist, totalOverall } = data;
+  const isFinal = artist.finalPosition > 0;
+  const diff = isFinal ? artist.finalPosition - rank : null;
+  
+  return (
+    <div className={`highlight-card ${isGold ? 'gold' : ''} ${isWorst ? 'worst' : ''} ${isHero ? 'hero-card' : ''}`} onClick={onClick} style={{ cursor: onClick ? "pointer" : "default" }}>
+      <img src={flagUrl(artist.country)} alt={artist.country} className="highlight-flag-outside" />
+      
+      <div className="highlight-category-title">{title}</div>
+      
+      <div className="highlight-content-wrap">
+        <h3>{countryName(artist.country)}</h3>
+        <p>{artist.name}</p>
+      </div>
+
+      <div className="highlight-stats-footer">
+        <div className="score-container-hero">
+           <div className="score-main">
+              <span className="score-val">{isHero ? totalOverall : score.toFixed(1)}</span>
+              <span className="score-label">{isHero ? "Suma punktów" : "Średnia punktów"}</span>
+           </div>
+           {isHero && (
+             <div className="hero-sub-stat">
+               <span>Średnia: {score.toFixed(1)}</span>
+             </div>
+           )}
+        </div>
+
+        {isFinal && (
+          <div className="official-container-hero">
+            <div className="official-info">
+              <span className="official-label">Finał</span>
+              <strong className="official-rank">Miejsce #{artist.finalPosition}</strong>
+            </div>
+            <div className={`diff-pill-hero ${diff! > 0 ? 'neg' : diff! < 0 ? 'pos' : ''}`}>
+               {diff === 0 ? 'OK' : `${diff! > 0 ? '↓' : '↑'}${Math.abs(diff!)}`}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <style jsx>{`
+        .highlight-card {
+          position: relative;
+          background: var(--surface-container-high);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 2rem;
+          aspect-ratio: 1 / 1;
+          display: flex;
+          flex-direction: column;
+          padding: 2rem;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+          transition: transform 400ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          overflow: visible;
+        }
+
+        .hero-card {
+          aspect-ratio: auto;
+          min-height: 25rem;
+          max-width: 600px;
+          margin: 0 auto;
+        }
+
+        .highlight-card:hover {
+          transform: translateY(-10px) scale(1.02);
+          z-index: 10;
+        }
+
+        .highlight-card.gold {
+          background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), var(--surface-container-high));
+          border-color: rgba(255, 215, 0, 0.3);
+          box-shadow: 0 20px 50px rgba(255, 215, 0, 0.15);
+        }
+
+        .highlight-category-title {
+          font-family: var(--font-label), sans-serif;
+          font-size: 0.7rem !important;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.15em;
+          color: var(--secondary);
+          margin-bottom: 1.5rem !important;
+        }
+
+        .highlight-flag-outside {
+          position: absolute;
+          top: -1.5rem;
+          right: -0.5rem;
+          width: 100px;
+          height: 100px;
+          object-fit: contain;
+          border-radius: 1rem;
+          filter: drop-shadow(0 15px 30px rgba(0,0,0,0.6));
+          transform: rotate(8deg);
+          transition: transform 400ms ease;
+        }
+
+        .highlight-card:hover .highlight-flag-outside {
+          transform: rotate(0deg) scale(1.1);
+        }
+
+        .highlight-content-wrap {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 0.5rem;
+          position: relative;
+          z-index: 2;
+        }
+
+        .highlight-content-wrap h3 {
+          font-family: var(--font-display), sans-serif;
+          font-size: 1.8rem;
+          margin: 0;
+          line-height: 1.1;
+          color: white;
+        }
+
+        .hero-card .highlight-content-wrap h3 {
+          font-size: 2.5rem;
+        }
+
+        .highlight-content-wrap p {
+          font-size: 1rem;
+          opacity: 0.7;
+          margin: 0;
+          color: var(--secondary);
+          font-weight: 600;
+        }
+
+        .highlight-stats-footer {
+          margin-top: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          z-index: 10;
+        }
+
+        .score-container-hero {
+          background: linear-gradient(135deg, rgba(45, 226, 230, 0.15), rgba(45, 226, 230, 0.05));
+          border: 1px solid rgba(45, 226, 230, 0.3);
+          border-radius: 1.5rem;
+          padding: 1.2rem;
+          text-align: center;
+          box-shadow: 0 8px 32px rgba(45, 226, 230, 0.1);
+        }
+
+        .highlight-card.worst .score-container-hero {
+          background: linear-gradient(135deg, rgba(255, 45, 149, 0.15), rgba(255, 45, 149, 0.05));
+          border-color: rgba(255, 45, 149, 0.3);
+          box-shadow: 0 8px 32px rgba(255, 45, 149, 0.1);
+        }
+
+        .score-main {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .score-val {
+          font-family: var(--font-display), sans-serif;
+          font-size: 2.8rem;
+          font-weight: 900;
+          color: var(--secondary);
+          line-height: 1;
+          text-shadow: 0 0 20px rgba(45, 226, 230, 0.4);
+        }
+
+        .hero-card .score-val {
+          font-size: 3.5rem;
+        }
+
+        .highlight-card.worst .score-val {
+          color: var(--primary);
+          text-shadow: 0 0 20px rgba(255, 45, 149, 0.4);
+        }
+
+        .score-label {
+          font-family: var(--font-label), sans-serif;
+          font-size: 0.65rem;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          margin-top: 0.4rem;
+          opacity: 0.8;
+          color: white;
+        }
+
+        .hero-sub-stat {
+          margin-top: 0.5rem;
+          font-size: 0.8rem;
+          font-weight: 700;
+          color: var(--secondary);
+          opacity: 0.9;
+        }
+
+        .official-container-hero {
+          background: rgba(0, 0, 0, 0.4);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 1.2rem;
+          padding: 0.8rem 1.2rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .official-info {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .official-label {
+          font-size: 0.6rem;
+          text-transform: uppercase;
+          opacity: 0.6;
+          color: white;
+        }
+
+        .official-rank {
+          font-size: 1.2rem;
+          color: white;
+          font-weight: 700;
+        }
+
+        .diff-pill-hero {
+          padding: 0.4rem 0.8rem;
+          border-radius: 2rem;
+          font-size: 0.85rem;
+          font-weight: 800;
+          font-family: var(--font-label), sans-serif;
+        }
+
+        .diff-pill-hero.pos {
+          background: rgba(74, 222, 128, 0.2);
+          color: #4ade80;
+          border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+
+        .diff-pill-hero.neg {
+          background: rgba(248, 113, 113, 0.2);
+          color: #f87171;
+          border: 1px solid rgba(248, 113, 113, 0.3);
+        }
+      `}</style>
+    </div>
   );
 }
 

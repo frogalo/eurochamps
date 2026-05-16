@@ -200,6 +200,11 @@ function RankingContent() {
     };
   }, [artists, users]);
 
+  const communitySortedArtists = useMemo(() => {
+    if (!communityStats || !communityStats.artistAverages) return [];
+    return Array.from(communityStats.artistAverages.values()).sort((a: any, b: any) => b.totalOverall - a.totalOverall);
+  }, [communityStats]);
+
   const sortedArtists = useMemo(() => {
     const currentUserRow = users.find(u => u.username === currentUser);
     const isFinal = artists.some(a => a.finalPosition > 0);
@@ -288,7 +293,7 @@ function RankingContent() {
                 return (
                   <div key={artist.id} className="artist-result-card">
                     <div className="ranking-number outside">
-                      {isFinal ? artist.finalPosition : "-"}
+                      {isFinal ? `#${artist.finalPosition}` : "-"}
                     </div>
 
                     {artist.country.length === 2 && (
@@ -436,6 +441,88 @@ function RankingContent() {
                   />
                 </>
               )}
+            </div>
+          </section>
+
+          <div className="section-divider"></div>
+
+          <section className="community-ranking-full" style={{ marginBottom: "6rem" }}>
+            <h2 className="section-title" style={{ marginLeft: "0", marginBottom: "2rem" }}>Wasz Ranking</h2>
+            <div className="static-ranking-grid">
+              {communitySortedArtists.map((data: any, index: number) => {
+                const artist = data.artist;
+                const communityRank = index + 1;
+                const isFinal = artist.finalPosition > 0;
+                const diff = isFinal ? artist.finalPosition - communityRank : null;
+                
+                return (
+                  <div key={artist.id} className="artist-result-card community-card">
+                    <div className="ranking-number outside">
+                      #{index + 1}
+                    </div>
+
+                    {artist.country.length === 2 && (
+                      <img 
+                        className="flag-hero outside" 
+                        src={flagUrl(artist.country)} 
+                        alt={countryName(artist.country)} 
+                      />
+                    )}
+
+                    <div className="result-card-inner" onClick={() => { setSelectedArtist(artist); setModalMode('community'); setIsModalOpen(true); }} style={{ cursor: "pointer" }}>
+                      <div className="result-card-main-info">
+                        <div className="artist-card-copy">
+                          <h3>{countryName(artist.country)}</h3>
+                          <p className="artist-song">{artist.song}</p>
+                          <p className="scoreboard-artist">{artist.name}</p>
+                        </div>
+
+                         <div className="user-score-breakdown">
+                           <div className="score-item total">
+                             <span>Suma pkt</span>
+                             <strong>{data.totalOverall}</strong>
+                           </div>
+                           {isFinal && (
+                             <div className="score-item official-diff">
+                               <span>Finał: #{artist.finalPosition}</span>
+                               <div className={`diff-pill-hero ${diff! > 0 ? 'neg' : diff! < 0 ? 'pos' : ''}`}>
+                                 {diff === 0 ? '=' : `${diff! > 0 ? '↓' : '↑'}${Math.abs(diff!)}`}
+                               </div>
+                             </div>
+                           )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="result-card-perspective">
+                      <div className="others-perspective-box" style={{ width: '100%' }}>
+                        <div className="votes-label">Oceny graczy</div>
+                        <div className="user-votes-wrap">
+                          {users.map((user) => {
+                            const vote = user.votes.find((v) => v.artistId === artist.id);
+                            
+                            return (
+                              <div key={user.userId} className="other-voter-item">
+                                <div className="voter-circle" title={user.displayName}>
+                                  {user.imagePath ? (
+                                    <img src={user.imagePath} alt={user.displayName} />
+                                  ) : (
+                                    getInitials(user.displayName)
+                                  )}
+                                </div>
+                                <div className="voter-label-name">
+                                  {user.displayName.slice(0, 5)}{user.displayName.length > 5 ? '...' : ''}
+                                </div>
+                                <div className="voter-gain-badge">+{vote?.overall || 0}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </section>
         </>
@@ -904,10 +991,13 @@ function RankingContent() {
           }
           .ranking-number.outside {
             left: 0.8rem;
-            top: 7.5rem;
-            font-size: 2rem !important;
+            top: 7.8rem;
+            font-size: 2.2rem !important;
             width: 84px !important;
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
           }
           .result-card-inner {
             padding-left: 6.5rem;
@@ -922,6 +1012,8 @@ function RankingContent() {
           }
           .user-score-breakdown {
             width: 100%;
+            display: flex;
+            align-items: center;
             justify-content: space-between;
             padding: 0.8rem;
           }
@@ -964,6 +1056,53 @@ function RankingContent() {
           .app-shell {
             padding-bottom: 4rem;
           }
+        }
+
+        .diff-pill-hero {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0.4rem 0.8rem;
+          border-radius: 2rem;
+          font-size: 0.85rem;
+          font-weight: 800;
+          font-family: var(--font-label), sans-serif;
+          line-height: 1;
+        }
+
+        .diff-pill-hero.pos {
+          background: rgba(74, 222, 128, 0.2);
+          color: #4ade80;
+          border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+
+        .diff-pill-hero.neg {
+          background: rgba(248, 113, 113, 0.2);
+          color: #f87171;
+          border: 1px solid rgba(248, 113, 113, 0.3);
+        }
+
+        .diff-pill-hero.mini {
+          font-size: 0.7rem;
+          padding: 0.2rem 0.6rem;
+        }
+
+        .official-diff {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.5rem;
+          background: rgba(0, 0, 0, 0.3);
+          padding: 0.8rem 1.2rem !important;
+          border-radius: 0.8rem;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .official-diff span {
+          font-size: 0.65rem;
+          text-transform: uppercase;
+          opacity: 0.7;
+          letter-spacing: 0.05em;
         }
 
         .section-divider {
@@ -1040,7 +1179,7 @@ function HighlightCard({ title, data, score, rank, isGold, isWorst, isHero, onCl
               <strong className="official-rank">Miejsce #{artist.finalPosition}</strong>
             </div>
             <div className={`diff-pill-hero ${diff! > 0 ? 'neg' : diff! < 0 ? 'pos' : ''}`}>
-               {diff === 0 ? 'OK' : `${diff! > 0 ? '↓' : '↑'}${Math.abs(diff!)}`}
+               {diff === 0 ? '=' : `${diff! > 0 ? '↓' : '↑'}${Math.abs(diff!)}`}
             </div>
           </div>
         )}

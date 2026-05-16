@@ -8,6 +8,8 @@ import CustomSelect from "@/components/CustomSelect";
 import { useUser } from "@/context/UserContext";
 import { getAdminHeaders } from "@/lib/admin-client";
 
+const flagUrl = (code: string) => `https://flagcdn.com/w80/${code.toLowerCase()}.png`;
+
 interface StageRecord {
   id: string;
   name: string;
@@ -236,7 +238,19 @@ export default function AdminStagesPage() {
             <input
               className="field-input"
               value={form.year}
-              onChange={(e) => setForm((c) => ({ ...c, year: e.target.value }))}
+              onChange={(e) => {
+                const newYear = e.target.value;
+                setForm((c) => {
+                  // If we are creating a new stage and changing year, 
+                  // we should probably exclude all artists by default as requested
+                  const updatedForm = { ...c, year: newYear };
+                  if (!editingId && newYear) {
+                    const yearArtists = artists.filter(a => a.year === newYear);
+                    updatedForm.disabledArtists = yearArtists.map(a => a.id);
+                  }
+                  return updatedForm;
+                });
+              }}
               placeholder="np. 2026"
             />
           </label>
@@ -307,29 +321,50 @@ export default function AdminStagesPage() {
 
           {form.year && (
             <div className="field-shell" style={{ gridColumn: "1 / -1" }}>
-              <span className="field-label">Wykluczeni artyści ({form.year})</span>
+              <span className="field-label">Artyści ({form.year})</span>
               <p className="support-copy" style={{ fontSize: "0.85rem", marginTop: "-0.3rem" }}>
-                Zaznacz artystów, którzy NIE powinnni brać udziału w tym konkursie.
+                Zaznacz artystów, którzy biorą udział w tym konkursie.
               </p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "0.8rem", marginTop: "0.5rem" }}>
+              <div className="artists-selection-grid">
                 {artists
                   .filter((a) => a.year === form.year)
                   .map((artist) => {
-                    const isDisabled = form.disabledArtists.includes(artist.id);
+                    const isSelected = !form.disabledArtists.includes(artist.id);
                     return (
-                      <label key={artist.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", padding: "0.5rem", background: "rgba(0,0,0,0.2)", borderRadius: "0.5rem" }}>
+                      <label 
+                        key={artist.id} 
+                        className={`custom-checkbox-label ${isSelected ? 'checked' : ''}`}
+                      >
                         <input
                           type="checkbox"
-                          checked={isDisabled}
+                          className="hidden-checkbox"
+                          checked={isSelected}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setForm((c) => ({ ...c, disabledArtists: [...c.disabledArtists, artist.id] }));
+                              // Include: remove from disabled
+                              setForm((c) => ({ 
+                                ...c, 
+                                disabledArtists: c.disabledArtists.filter((id) => id !== artist.id) 
+                              }));
                             } else {
-                              setForm((c) => ({ ...c, disabledArtists: c.disabledArtists.filter((id) => id !== artist.id) }));
+                              // Exclude: add to disabled
+                              setForm((c) => ({ 
+                                ...c, 
+                                disabledArtists: [...c.disabledArtists, artist.id] 
+                              }));
                             }
                           }}
                         />
-                        <span style={{ fontSize: "0.9rem" }}>{artist.country} - {artist.name}</span>
+                        <div className="checkbox-visual">
+                          {isSelected && <span className="check-mark">✓</span>}
+                        </div>
+                        <div className="checkbox-content">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <img src={flagUrl(artist.country)} alt={artist.country} className="artist-flag-mini" />
+                            <span className="artist-country-code">{artist.country}</span>
+                          </div>
+                          <span className="artist-display-name">{artist.name}</span>
+                        </div>
                       </label>
                     );
                   })}
@@ -413,6 +448,99 @@ export default function AdminStagesPage() {
           </article>
         ))}
       </section>
+      <style jsx>{`
+        .artists-selection-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+          gap: 0.8rem;
+          margin-top: 1rem;
+        }
+
+        .custom-checkbox-label {
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+          padding: 0.8rem 1rem;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 1rem;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          user-select: none;
+        }
+
+        .custom-checkbox-label:hover {
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.15);
+          transform: translateY(-1px);
+        }
+
+        .custom-checkbox-label.checked {
+          background: rgba(45, 226, 230, 0.1);
+          border-color: rgba(45, 226, 230, 0.4);
+          box-shadow: 0 4px 12px rgba(45, 226, 230, 0.1);
+        }
+
+        .hidden-checkbox {
+          display: none;
+        }
+
+        .checkbox-visual {
+          width: 20px;
+          height: 20px;
+          border-radius: 6px;
+          border: 2px solid rgba(255, 255, 255, 0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          transition: all 0.2s ease;
+        }
+
+        .checked .checkbox-visual {
+          background: var(--secondary);
+          border-color: var(--secondary);
+        }
+
+        .check-mark {
+          color: black;
+          font-size: 0.8rem;
+          font-weight: 900;
+        }
+
+        .checkbox-content {
+          display: flex;
+          flex-direction: column;
+          gap: 0.1rem;
+        }
+
+        .artist-country-code {
+          font-size: 0.65rem;
+          text-transform: uppercase;
+          font-weight: 800;
+          letter-spacing: 0.05em;
+          opacity: 0.6;
+          color: white;
+        }
+
+        .artist-flag-mini {
+          width: 18px;
+          height: 12px;
+          object-fit: cover;
+          border-radius: 2px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .artist-display-name {
+          font-size: 0.95rem;
+          font-weight: 600;
+          color: white;
+        }
+
+        .checked .artist-display-name {
+          color: white;
+        }
+      `}</style>
     </main>
   );
 }

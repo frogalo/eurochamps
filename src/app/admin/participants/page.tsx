@@ -400,6 +400,105 @@ export default function AdminArtistsPage() {
           </div>
         </div>
       )}
+      <style jsx>{`
+        .admin-entries-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 1.5rem;
+          margin-top: 2rem;
+        }
+
+        .admin-entry-card {
+          display: flex;
+          flex-direction: column;
+          gap: 1.2rem;
+          height: 100%;
+          overflow: hidden;
+          background: var(--surface-container-high);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .entry-card-header {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          min-width: 0;
+        }
+
+        .entry-flag {
+          width: 50px;
+          height: 50px;
+          flex-shrink: 0;
+          object-fit: cover;
+        }
+
+        .entry-card-header div {
+          min-width: 0;
+          flex: 1;
+        }
+
+        .section-title {
+          margin: 0;
+          font-size: 1.1rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          color: white;
+        }
+
+        .stage-card-date {
+          font-size: 0.75rem;
+          opacity: 0.6;
+          margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .hero-text {
+          font-size: 0.9rem;
+          margin: 0;
+          color: var(--secondary);
+          word-break: break-all;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          height: 2.7rem; /* roughly 2 lines */
+        }
+
+        .entry-video-preview {
+          width: 100%;
+          aspect-ratio: 16 / 9;
+          border-radius: 0.75rem;
+          overflow: hidden;
+          position: relative;
+        }
+
+        .video-thumbnail {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .admin-inline-actions {
+          margin-top: auto;
+          display: flex;
+          gap: 0.8rem;
+        }
+
+        @media (max-width: 1100px) {
+          .admin-entries-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        @media (max-width: 768px) {
+          .admin-entries-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
     </main>
   );
 }
